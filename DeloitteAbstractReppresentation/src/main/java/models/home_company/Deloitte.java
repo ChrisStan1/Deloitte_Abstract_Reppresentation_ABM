@@ -1,13 +1,18 @@
 package models.home_company;
 
-import models.SimpleFirmModel.parameters.Globals;
-import simudyne.core.abm.Agent;
-import simudyne.core.annotations.Variable;
+import models.SimpleFirmModel.Messages;
+import simudyne.core.abm.Action;
 
-public class Deloitte extends Agent<Globals> implements HomeCompany {
+public class Deloitte extends DefaultHomeCompany implements HomeCompany {
 
   /*******************************
-   * Setting Up Agent parameters:
+   * Action Implementations:
    *******************************/
-  @Variable public String name;
+
+  public static Action<Deloitte> registerConsultants =
+      Action.create(
+          Deloitte.class,
+          a -> {
+            a.getMessagesOfType(Messages.RegistrationMessage.class).forEach(a::consultantSetup);
+          });
 }

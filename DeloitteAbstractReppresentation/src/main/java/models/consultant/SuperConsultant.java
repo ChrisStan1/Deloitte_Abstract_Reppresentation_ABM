@@ -1,5 +1,7 @@
 package models.consultant;
 
+import models.SimpleFirmModel.Links;
+import models.SimpleFirmModel.Messages;
 import models.SimpleFirmModel.parameters.ConsultantStatus;
 import models.SimpleFirmModel.parameters.Globals;
 import models.SimpleFirmModel.parameters.Specialization;
@@ -13,27 +15,42 @@ public abstract class SuperConsultant extends Agent<Globals> {
   /****************************************
    * Agent Characteristics:
    ****************************************/
-
   // Printed:
   @Variable public int nbAllowedOverlappedProjects;
 
   // Hidden:
   public Specialization specialization;
-    public ConsultantStatus status;
+  public ConsultantStatus status;
 
-    /****************************************
+  /****************************************
    * Implementation Of Agent Functions:
    ****************************************/
 
-  // Todo: This is going to have to change in order to allow the user to specify the size of each
-  // department.
+  // Todo: Ability to select min of agents in each discipline
+  // Todo: Implement a function to not randomise (IMPORTANT)
   public Specialization assignAgentSpecialization() {
     return Specialization.values()[new Random().nextInt(Specialization.values().length)];
   }
 
   /****************************************
+   * Implementation Of Agent Actions:
+   ****************************************/
+
+  public void registerWithFirmMethod() {
+    getLinks(Links.DeloitteConsultantLink.class)
+        .send(
+            Messages.RegistrationMessage.class,
+            (msg, link) -> {
+              msg.overlappedProjects = nbAllowedOverlappedProjects;
+              msg.specialization = specialization;
+              msg.isSrConsultant = status;
+            });
+  }
+
+  /****************************************
    * Debugging Features:
    ****************************************/
-  // Debugging
   @Variable public String dbAgentSpecialization;
+
+  @Variable public String dbAgentStatus;
 }
