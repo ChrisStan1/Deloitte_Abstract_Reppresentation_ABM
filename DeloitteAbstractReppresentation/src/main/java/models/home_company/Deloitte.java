@@ -6,11 +6,8 @@ import simudyne.core.annotations.Variable;
 
 public class Deloitte extends Agent<Globals> implements HomeCompany {
 
-
-    /*******************************
-     * Setting Up Agent parameters:
-     *******************************/
-
-    @Variable public String name;
-
+  /*******************************
+   * Setting Up Agent parameters:
+   *******************************/
+  @Variable public String name;
 }

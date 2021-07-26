@@ -1,7 +1,10 @@
 package models.SimpleFirmModel; /* ABM Initialization By CAS220 */
 
-import models.client_company.DefaultClientCompany;
+import models.SimpleFirmModel.parameters.ConsultantStatus;
 import models.SimpleFirmModel.parameters.Globals;
+import models.client_company.DefaultClientCompany;
+import models.consultant.JrConsultant;
+import models.consultant.SrConsultant;
 import models.home_company.Deloitte;
 import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.Group;
@@ -20,7 +23,8 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     createLongAccumulator("TotalRevenue");
 
     // Register Agents:
-    registerAgentTypes(Deloitte.class, DefaultClientCompany.class);
+    registerAgentTypes(
+        Deloitte.class, DefaultClientCompany.class, JrConsultant.class, SrConsultant.class);
 
     // Register Links (Messages):
     registerLinkTypes(Links.DeloitteClientLink.class);
@@ -30,10 +34,11 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     createDoubleAccumulator("jrEmploymentRate");
   }
 
+  // Constructor for Network and Agents:
   @Override
   public void setup() {
 
-    // Deloitte Firm (only Ever going to be 1)
+    // Deloitte Firm
     Group<Deloitte> deloitteGroup =
         generateGroup(
             Deloitte.class,
@@ -43,10 +48,35 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             });
 
     // SrConsultant
+    Group<SrConsultant> srConsultantGroup =
+            generateGroup(
+                    SrConsultant.class,
+                    getGlobals().nbSrConsultants,
+                    a -> {
+                      // Todo: Allow the user to specify the ratio between consultants:
+                      a.specialization = a.assignAgentSpecialization();
+                      a.status = ConsultantStatus.SENIOR;
+                      a.generateAllowedOverlappedProjects();
+
+                      // Debugging
+                      a.dbAgentSpecialization = a.specialization.toString();
+                    });
 
     // JrConsultant
+    Group<JrConsultant> jrConsultantGroup =
+            generateGroup(
+                    JrConsultant.class,
+                    getGlobals().nbJrConsultants,
+                    a -> {
+                      // Todo: Allow the user to specify the ratio between consultants:
+                      a.specialization = a.assignAgentSpecialization();
+                      a.generateAllowedOverlappedProjects();
 
-    // Companies List (Constructor)
+                      // Debugging
+                      a.dbAgentSpecialization = a.specialization.toString();
+                    });
+
+    // Companies List
     Group<DefaultClientCompany> clientCompanyGroup =
         generateGroup(
             DefaultClientCompany.class,
@@ -55,10 +85,6 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
               // Company Characteristics Setup;
               a.name = "Company # " + a.getID();
             });
-
-    /*********************************
-     *Setting up Links between Agents
-     *********************************/
 
     // Deloitte - ClientCompany links
     deloitteGroup.fullyConnected(clientCompanyGroup, Links.DeloitteClientLink.class);
