@@ -1,10 +1,11 @@
 package models.SimpleFirmModel; /* ABM Initialization By CAS220 */
 
-import models.SimpleFirmModel.parameters.ConsultantStatus;
 import models.SimpleFirmModel.parameters.Globals;
+import models.SimpleFirmModel.parameters.Ranking;
 import models.SimpleFirmModel.parameters.Specialization;
 import models.client_company.DefaultClientCompany;
 import models.client_contract.DefaultContractGenerationStrategy;
+import models.client_contract.DefaultContractVisualization;
 import models.consultant.JrConsultant;
 import models.consultant.SrConsultant;
 import models.home_company.Deloitte;
@@ -27,7 +28,11 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
 
     // Register Agents:
     registerAgentTypes(
-        Deloitte.class, DefaultClientCompany.class, JrConsultant.class, SrConsultant.class);
+        Deloitte.class,
+        DefaultClientCompany.class,
+        JrConsultant.class,
+        SrConsultant.class,
+        DefaultContractVisualization.class);
 
     // Register Links (Messages):
     registerLinkTypes(
@@ -59,16 +64,16 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             SrConsultant.class,
             getGlobals().nbSrConsultants,
             a -> {
-              a.status = ConsultantStatus.SENIOR;
+              a.ranking = Ranking.SENIOR;
               a.generateAllowedOverlappedProjects();
 
               // Todo: Ability to select min of agents in each discipline
               a.specialization = Specialization.generateNewRandomSpecialization();
-              //a.specialization = a.assignAgentSpecialization();
+              // a.specialization = a.assignAgentSpecialization();
 
               // Debugging
               a.dbAgentSpecialization = a.specialization.toString();
-              a.dbAgentStatus = a.status.toString();
+              a.dbAgentStatus = a.ranking.toString();
             });
 
     // JrConsultant
@@ -77,16 +82,16 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             JrConsultant.class,
             getGlobals().nbJrConsultants,
             a -> {
-              a.status = ConsultantStatus.JUNIOR;
+              a.ranking = Ranking.JUNIOR;
               a.generateAllowedOverlappedProjects();
 
               // Todo: Ability to select min of agents in each discipline
               a.specialization = Specialization.generateNewRandomSpecialization();
-              //a.specialization = a.assignAgentSpecialization();
+              // a.specialization = a.assignAgentSpecialization();
 
               // Debugging
               a.dbAgentSpecialization = a.specialization.toString();
-              a.dbAgentStatus = a.status.toString();
+              a.dbAgentStatus = a.ranking.toString();
             });
 
     // Companies List
@@ -138,11 +143,18 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
   @Override
   public void step() {
     super.step();
+
     // Setup Step
     if (getContext().getTick() == 0) {
       run(
-              Split.create(SrConsultant.registerWithFirm, JrConsultant.registerWithFirm),
-              Deloitte.registerConsultants);
+          Split.create(SrConsultant.registerWithFirm, JrConsultant.registerWithFirm),
+          Deloitte.registerConsultants);
     }
+
+    // Contract Acquisition:
+    run(
+        DefaultClientCompany.contractProposal,
+        Deloitte.contractReview,
+        DefaultClientCompany.contractProposalResponse);
   }
 }

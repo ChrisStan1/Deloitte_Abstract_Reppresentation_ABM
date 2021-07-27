@@ -1,12 +1,12 @@
 package models.SimpleFirmModel.parameters;
 
-public enum ConsultantStatus {
+public enum Ranking {
   SENIOR("Senior"),
   JUNIOR("Junior");
 
   private final String name;
 
-  ConsultantStatus(String s) {
+  Ranking(String s) {
     name = s;
   }
 

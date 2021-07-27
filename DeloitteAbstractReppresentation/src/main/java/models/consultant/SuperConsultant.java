@@ -2,7 +2,7 @@ package models.consultant;
 
 import models.SimpleFirmModel.Links;
 import models.SimpleFirmModel.Messages;
-import models.SimpleFirmModel.parameters.ConsultantStatus;
+import models.SimpleFirmModel.parameters.Ranking;
 import models.SimpleFirmModel.parameters.Globals;
 import models.SimpleFirmModel.parameters.Specialization;
 import simudyne.core.abm.Agent;
@@ -20,7 +20,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
 
   // Hidden:
   public Specialization specialization;
-  public ConsultantStatus status;
+  public Ranking ranking;
 
   /****************************************
    * Implementation Of Agent Functions:
@@ -43,7 +43,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
             (msg, link) -> {
               msg.overlappedProjects = nbAllowedOverlappedProjects;
               msg.specialization = specialization;
-              msg.isSrConsultant = status;
+              msg.ranking = ranking;
             });
   }
 
