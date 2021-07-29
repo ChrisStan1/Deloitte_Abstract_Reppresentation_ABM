@@ -16,7 +16,15 @@ public class DefaultClientCompany extends SuperClientCompany implements ClientCo
       Action.create(
           DefaultClientCompany.class,
           a -> {
-            a.getMessagesOfType(Messages.contractProposalResponse.class)
+            a.getMessagesOfType(Messages.ContractProposalResponse.class)
+                .forEach(a::isContractAccepted);
+          });
+
+  public static Action<DefaultClientCompany> contractCompleted =
+      Action.create(
+          DefaultClientCompany.class,
+          a -> {
+            a.getMessagesOfType(Messages.ContractProposalResponse.class)
                 .forEach(a::isContractAccepted);
           });
 }

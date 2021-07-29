@@ -42,38 +42,45 @@ public abstract class SuperClientCompany extends Agent<Globals> {
     sendContractProposal(contractID, contractSize, contractDuration, contractSpecialization);
   }
 
+
+    /****************************************
+     * Messages functions:
+     ****************************************/
   private void sendContractProposal(
       long contId, long contSize, long contDuration, Specialization contSpecialization) {
     getLinks(Links.DeloitteClientLink.class)
         .send(
-            Messages.contractProposal.class,
+            Messages.ContractProposal.class,
             (msg, link) -> {
               msg.contId = contId;
               msg.contSize = contSize;
               msg.contDuration = contDuration;
               msg.contSpecialization = contSpecialization;
+
+              msg.compClient = this;
             });
   }
 
-  public void isContractAccepted(Messages.contractProposalResponse msg) {
+  public void isContractAccepted(Messages.ContractProposalResponse msg) {
     if (msg.isAccepted) {
       createNewContractAgent(msg);
     }
-    //Todo: Else something...
+    // Todo: Else something...
   }
 
-  public void createNewContractAgent(Messages.contractProposalResponse msg) {
+  public void createNewContractAgent(Messages.ContractProposalResponse msg) {
 
     spawn(
-            DefaultContractVisualization.class,
-            a -> {
-              a.contId = msg.contId;
-              a.contSize = msg.contSize;
-              a.contDuration = msg.contDuration;
-              a.contSpecialization = msg.contSpecialization;
-              a.dbContSpecialization = msg.contSpecialization.toString();
-              a.addLink(getID(), Links.DeloitteClientLink.class);
-            });
+        DefaultContractVisualization.class,
+        a -> {
+          a.contId = msg.contId;
+          a.contSize = msg.contSize;
+          a.contDuration = msg.contDuration;
+          a.contSpecialization = msg.contSpecialization;
+          a.dbContSpecialization = msg.contSpecialization.toString();
+          a.addLink(getID(), Links.ContractToClient.class);
+          msg.lastContract.addContractVisualization(a);
+        });
   }
   /****************************************
    * Debugging Features:

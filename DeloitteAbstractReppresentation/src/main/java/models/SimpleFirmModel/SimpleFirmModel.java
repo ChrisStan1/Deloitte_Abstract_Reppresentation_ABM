@@ -9,6 +9,7 @@ import models.client_contract.DefaultContractVisualization;
 import models.consultant.JrConsultant;
 import models.consultant.SrConsultant;
 import models.home_company.Deloitte;
+import models.market.DefaultMarket;
 import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.Group;
 import simudyne.core.abm.Split;
@@ -38,7 +39,8 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     registerLinkTypes(
         Links.DeloitteClientLink.class,
         Links.DeloitteConsultantLink.class,
-        Links.ConsultantLink.class);
+        Links.ConsultantLink.class,
+        Links.ContractToClient.class);
 
     // Debugging Variable:
     createDoubleAccumulator("srEmploymentRate");
@@ -56,6 +58,7 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             getGlobals().deloitteAgent,
             a -> {
               a.name = "Deloitte";
+              a.market = new DefaultMarket();
             });
 
     // SrConsultant
@@ -155,6 +158,52 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     run(
         DefaultClientCompany.contractProposal,
         Deloitte.contractReview,
-        DefaultClientCompany.contractProposalResponse);
+        Split.create(
+            DefaultClientCompany.contractProposalResponse,
+            SrConsultant.consultantRequest,
+            JrConsultant.consultantRequest));
+
+    // Step Though Contracts:
+    run(Deloitte.contractStep);
+    run(
+        DefaultContractVisualization
+            .stepContract); // Commented out can be used to debug code easier.
+
+    // Terminate Contracts:
+    run(
+        Deloitte.terminateContracts,
+        Split.create(
+            DefaultClientCompany.contractCompleted,
+            SrConsultant.consultantReleased,
+            JrConsultant.consultantReleased));
+
+    // Consultants Quitting:
+    // Todo: Make Sure They don't quit when they still have a job:
+    // Todo: Make an action of resignation to deloitte to have them removed from the Queue
+    run(Split.create(SrConsultant.consultantQuit, JrConsultant.consultantQuit));
+
+    // Hiring More consultants
+    run(Deloitte.hireConsultants);
+    // Todo: Need to register the new hires!!!
+
+    /*
+    if (getGlobals().missingSrAgents > getGlobals().allowedMissedContracts
+            || getGlobals().missingJrAgents > getGlobals().allowedMissedContracts) {
+        run(Deloitte.hireConsultants);
+        run(
+                Split.create(SrConsultant.registerWithFirm, JrConsultant.registerWithFirm),
+                Deloitte.registerConsultants);
+    }
+    getGlobals().missingSrAgents = 0;
+    getGlobals().missingJrAgents = 0;
+     */
+
+    // Iteration Global Updates:
+    // Updating market rate for consultants:
+    // FIXME: should be more natural not hardcoded defaultMarket
+    DefaultMarket.updateEmploymentRate(getGlobals().srEmploymentMean, true);
+    DefaultMarket.updateEmploymentRate(getGlobals().jrEmploymentMean, false);
+    getDoubleAccumulator("srEmploymentRate").add(DefaultMarket.srEmploymentRate);
+    getDoubleAccumulator("jrEmploymentRate").add(DefaultMarket.jrEmploymentRate);
   }
 }

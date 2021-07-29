@@ -2,12 +2,13 @@ package models.consultant;
 
 import models.SimpleFirmModel.Links;
 import models.SimpleFirmModel.Messages;
-import models.SimpleFirmModel.parameters.Ranking;
 import models.SimpleFirmModel.parameters.Globals;
+import models.SimpleFirmModel.parameters.Ranking;
 import models.SimpleFirmModel.parameters.Specialization;
 import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 
+import java.util.HashMap;
 import java.util.Random;
 
 public abstract class SuperConsultant extends Agent<Globals> {
@@ -17,6 +18,11 @@ public abstract class SuperConsultant extends Agent<Globals> {
    ****************************************/
   // Printed:
   @Variable public int nbAllowedOverlappedProjects;
+
+  @Variable public int nbProjectsSameSpec = 0;
+  @Variable public int nbProjects = 0;
+  @Variable public double efficiency = 1.0;
+  @Variable public int monthsBenched = 0;
 
   // Hidden:
   public Specialization specialization;
@@ -46,6 +52,66 @@ public abstract class SuperConsultant extends Agent<Globals> {
               msg.ranking = ranking;
             });
   }
+
+  public void assignConsultant(Messages.ConsultantRequest msg) {
+    if (msg.contSpecialization == specialization) {
+      nbProjectsSameSpec++;
+    } else {
+      efficiency *= getGlobals().dropInEfficiency;
+    }
+    nbProjects++;
+  }
+
+  public void releaseConsultant(Messages.ConsultantReleased msg) {
+    if (msg.contSpecialization == specialization) {
+      nbProjectsSameSpec--;
+    } else {
+      efficiency /= getGlobals().dropInEfficiency;
+    }
+    nbProjects--;
+  }
+
+  public void quitConsultant() {
+    // Check if the efficiency is to low,
+    // if the have been benched for to long,
+    // if the as been no jobs for the last 25 days.
+    // Salary Value:
+    if (efficiency < getGlobals().effQuittingEdge || floatingConsultants()) {
+      removeLinks(Links.ConsultantLink.class);
+      stop();
+    }
+  }
+
+  public boolean floatingConsultants() {
+    // Keeping track if consultants are in use or not.
+    if (nbProjects != 0) {
+      monthsBenched = 0;
+      return false;
+    } else {
+      return monthsBenched++ >= getGlobals().nbDaysBenched;
+    }
+  }
+
+  public void spawnNewConsultant(
+      Specialization newSpecialization,
+      HashMap<Long, Specialization> consSpecializationMap,
+      long deloitteId) {
+
+    specialization = newSpecialization;
+    generateAllowedOverlappedProjects();
+
+    // Linking the agent to everybody else!
+    addLink(deloitteId, Links.DeloitteClientLink.class);
+    consSpecializationMap.forEach(
+        (conID, conSpec) -> {
+          addLink(conID, Links.ConsultantLink.class);
+        });
+
+    // Debugging
+    dbAgentSpecialization = specialization.toString();
+  }
+
+  abstract void generateAllowedOverlappedProjects();
 
   /****************************************
    * Debugging Features:

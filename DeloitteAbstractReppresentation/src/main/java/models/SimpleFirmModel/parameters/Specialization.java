@@ -9,6 +9,8 @@ public enum Specialization {
 
   private final String name;
 
+  private static Specialization[] vals = values();
+
   Specialization(String s) {
     name = s;
   }
@@ -24,5 +26,9 @@ public enum Specialization {
 
   public static Specialization generateNewRandomSpecialization() {
     return Specialization.values()[new Random().nextInt(Specialization.values().length)];
+  }
+
+  public Specialization skip(int amount) {
+    return vals[(this.ordinal() + amount) % vals.length];
   }
 }

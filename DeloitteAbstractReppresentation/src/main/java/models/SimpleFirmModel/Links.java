@@ -8,4 +8,7 @@ public class Links {
   public static class DeloitteConsultantLink extends Link {}
 
   public static class ConsultantLink extends Link{}
+
+  public static class ContractToClient extends Link{}
+
 }
