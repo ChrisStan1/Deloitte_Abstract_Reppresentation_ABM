@@ -2,36 +2,35 @@ package models.market;
 
 import models.SimpleFirmModel.parameters.Globals;
 import simudyne.core.abm.Agent;
+import simudyne.core.annotations.Variable;
 
 import java.util.Random;
 
-public abstract class SuperMarket extends Agent<Globals> {
+public abstract class SuperMarket extends Agent<Globals> implements Market {
 
-  public static double srEmploymentRate = 1.0;
-  public static double jrEmploymentRate = 1.0;
+  @Override
+  public void employmentUpdateRate() {
 
-  // Constructor:
-  void DefaultMarket() {
-    updateEmploymentRate(getGlobals().srEmploymentMean, true);
-    updateEmploymentRate(getGlobals().jrEmploymentMean, false);
+    updateEmploymentRate(true);
+    updateEmploymentRate(false);
   }
 
-  // Todo: Add the Employment Mean !!!
-  public static void updateEmploymentRate(double employmentMean, boolean isSrCons) {
+  @Variable
+  public double srEmploymentMean = 1.0;
+  @Variable
+  public double jrEmploymentMean = 1.0;
+
+
+  @Override
+  public void updateEmploymentRate(boolean isSrCons) {
 
     double deviation = (new Random().nextGaussian() / 100); // Used for %
     if (isSrCons) {
-      srEmploymentRate += deviation;
+      srEmploymentMean += deviation;
     } else {
-      jrEmploymentRate += deviation;
+      jrEmploymentMean += deviation;
     }
   }
 
-  public static double getSrEmploymentRate() {
-    return srEmploymentRate;
-  }
 
-  public static double getJrEmploymentRate() {
-    return jrEmploymentRate;
-  }
 }

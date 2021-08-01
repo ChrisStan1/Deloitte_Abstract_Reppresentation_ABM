@@ -1,5 +1,7 @@
 package models.SimpleFirmModel.parameters;
 
+import models.market.DefaultMarket;
+import models.market.Market;
 import simudyne.core.abm.GlobalState;
 import simudyne.core.annotations.Constant;
 import simudyne.core.annotations.Input;
@@ -9,6 +11,9 @@ public class Globals extends GlobalState {
   // Deloitte
   @Constant(name = "Home) Deloitte Agent")
   public int deloitteAgent = 1;
+
+  @Input(name = "Home) Fixed Costs")
+  public int deloitteFixedCosts = 10000000;
 
   // Consultants
   @Input(name = "Cons) SrConsultants #")
@@ -44,8 +49,22 @@ public class Globals extends GlobalState {
   @Input(name = "Hire) Allowed missed contracts")
   public double allowedMissedContracts = 1;
 
+  @Input(name = "Salary) Jr AvgSalary")
+  public int JrSalary = 1000;
+
+  @Input(name = "Salary) Sr AvgSalary")
+  public int SrSalary = 2000;
+
+  @Input(name = "Revenue) Jr AvgSalary")
+  public int JrRevenue = 1500;
+
+  @Input(name = "Revenue) Sr AvgSalary")
+  public int SrRevenue = 2500;
+
   // Companies
   @Input(name = "C) Companies #")
   public long nbCompanies = 5;
 
+  // Hidden Variables
+  public boolean hasHiredConsultants = false;
 }

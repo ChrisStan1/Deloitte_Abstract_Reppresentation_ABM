@@ -1,13 +1,13 @@
 package models.home_company;
 
 import models.SimpleFirmModel.Messages;
+import models.SimpleFirmModel.SimpleFirmModel;
 import models.SimpleFirmModel.parameters.Globals;
 import models.SimpleFirmModel.parameters.Ranking;
 import models.SimpleFirmModel.parameters.Specialization;
 import models.client_contract.ClientContract;
 import models.consultant.JrConsultant;
 import models.consultant.SrConsultant;
-import models.market.DefaultMarket;
 import models.market.Market;
 import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
@@ -26,8 +26,6 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   // Printed:
   @Variable public String name;
 
-  // Hidden:
-  public Market market;
 
   /*******************************
    * Consultants Information:
@@ -131,11 +129,14 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   /*******************************
    * Function Implementations:
    *******************************/
-  public void consultantSetup(Messages.RegistrationMessage msg) {
-    consSpecializationMap.put(msg.getSender(), msg.specialization);
-    consAvailableSlots.put(msg.getSender(), msg.overlappedProjects);
-    consRankingMap.put(msg.getSender(), msg.ranking);
-    assignLLQueue(msg.specialization, msg.ranking, msg.getSender());
+  public void consultantSetup(Messages.Registration msg) {
+
+    if (!consSpecializationMap.containsKey(msg.getSender())) {
+      consSpecializationMap.put(msg.getSender(), msg.specialization);
+      consAvailableSlots.put(msg.getSender(), msg.overlappedProjects);
+      consRankingMap.put(msg.getSender(), msg.ranking);
+      assignLLQueue(msg.specialization, msg.ranking, msg.getSender());
+    }
   }
 
   public void acceptContract(Messages.ContractProposal msg) {
@@ -323,9 +324,6 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
       releaseConsultants(compContract, agentsFreedSr);
       releaseConsultants(compContract, agentsFreedJr);
     }
-
-    // Remove completed contracts
-    completedContracts.clear();
   }
 
   private void releaseConsultants(ClientContract compContract, ArrayList<Long> agentsFreed) {
@@ -351,13 +349,15 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   public void hireConsultants() {
     if (missingSrAgents > getGlobals().allowedMissedContracts
         || missingJrAgents > getGlobals().allowedMissedContracts) {
-      if (missingSrAgents > 2 && DefaultMarket.getSrEmploymentRate() > new Random().nextDouble()) {
+      if (missingSrAgents > 2 && getGlobals().srEmploymentMean > new Random().nextDouble()) {
         spawnSrConsultant();
         missingSrAgents = 0;
+        getGlobals().hasHiredConsultants = true;
       }
-      if (missingJrAgents > 2 && DefaultMarket.getJrEmploymentRate() > new Random().nextDouble()) {
+      if (missingJrAgents > 2 && getGlobals().jrEmploymentMean > new Random().nextDouble()) {
         spawnJrConsultant();
         missingJrAgents = 0;
+        getGlobals().hasHiredConsultants = true;
       }
     }
   }
@@ -367,7 +367,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     spawn(
         JrConsultant.class,
         jr -> {
-          jr.spawnNewConsultant(newSpecialization, consSpecializationMap, getID());
+          jr.spawnNewConsultant(newSpecialization, consSpecializationMap, JUNIOR, getID());
         });
   }
 
@@ -376,8 +376,24 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     spawn(
         SrConsultant.class,
         sr -> {
-          sr.spawnNewConsultant(newSpecialization, consSpecializationMap, getID());
+          sr.spawnNewConsultant(newSpecialization, consSpecializationMap, SENIOR, getID());
         });
+  }
+
+  // Todo: Check
+  public void calculatePNLEachConsultant(Messages.PandL PNL) {
+    getLongAccumulator("MonthlyGrossProfit").add(PNL.revenue);
+    getLongAccumulator("MonthlyNetProfit").add(PNL.revenue - PNL.salary);
+  }
+
+  public void retainedProfit() {
+    for (ClientContract contract : completedContracts) {
+      getLongAccumulator("MonthlyContractProfit").add(contract.getSize());
+    }
+    getLongAccumulator("MonthlyContractProfit")
+        .add(getLongAccumulator("MonthlyContractProfit").value() - getGlobals().deloitteFixedCosts);
+    // Remove completed contracts
+    completedContracts.clear();
   }
 
   /************************************

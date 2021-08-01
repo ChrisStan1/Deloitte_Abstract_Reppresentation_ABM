@@ -11,4 +11,8 @@ public class Links {
 
   public static class ContractToClient extends Link{}
 
+  public static class DeloitteMarketLink extends Link{}
+
+  public static class ClientCompanyMarketLink extends Link{}
+
 }

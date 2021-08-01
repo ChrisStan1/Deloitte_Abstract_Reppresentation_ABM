@@ -8,7 +8,7 @@ import java.util.Random;
 public class SrConsultant extends SuperConsultant implements Consultant {
 
   public static Action<SrConsultant> registerWithFirm =
-      Action.create(SrConsultant.class, SuperConsultant::registerWithFirmMethod);
+      Action.create(SrConsultant.class, SuperConsultant::registerWithFirmMethodMessage);
 
   public static Action<SrConsultant> consultantRequest =
       Action.create(
@@ -27,8 +27,28 @@ public class SrConsultant extends SuperConsultant implements Consultant {
   public static Action<SrConsultant> consultantQuit =
       Action.create(SrConsultant.class, SuperConsultant::quitConsultant);
 
+  public static Action<SrConsultant> revenueNsalarySend =
+      Action.create(SrConsultant.class, SuperConsultant::revenueNsalaryMessage);
+
   @Override
   public void generateAllowedOverlappedProjects() {
     this.nbAllowedOverlappedProjects = new Random().nextInt(5) + 5;
+  }
+
+  @Override
+  public void generateSalary() {
+    this.salary = (getGlobals().SrSalary + (long) new Random().nextDouble() * 10000)*30;
+  }
+
+  @Override
+  public void revenueCalculationNewContractGiven() {
+    int agentRevenue = getGlobals().SrRevenue;
+    revenueCalibrationNewContract(agentRevenue);
+  }
+
+  @Override
+  void revenueCalculationContractRelease() {
+    int agentRevenue = getGlobals().SrRevenue;
+    revenueCalibrationContractRelease(agentRevenue);
   }
 }

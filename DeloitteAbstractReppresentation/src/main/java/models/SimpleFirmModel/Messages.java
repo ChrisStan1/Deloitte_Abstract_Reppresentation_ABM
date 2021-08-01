@@ -8,7 +8,7 @@ import simudyne.core.graph.Message;
 
 public class Messages {
 
-  public static class RegistrationMessage extends Message {
+  public static class Registration extends Message {
     public Specialization specialization;
     public int overlappedProjects;
     public Ranking ranking;
@@ -42,6 +42,10 @@ public class Messages {
   }
 
   public static class CompletedContract extends Message{
+  }
 
+  public static class PandL extends Message{
+    public long revenue;
+    public long salary;
   }
 }

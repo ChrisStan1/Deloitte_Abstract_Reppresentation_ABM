@@ -9,6 +9,8 @@ import models.client_contract.DefaultContractVisualization;
 import models.consultant.JrConsultant;
 import models.consultant.SrConsultant;
 import models.home_company.Deloitte;
+import models.market.BusinessCycle;
+import models.market.DefaultBusinessCycle;
 import models.market.DefaultMarket;
 import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.Group;
@@ -25,7 +27,9 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
 
     // Accumulators: (MonteCarlo Simulations)
     createLongAccumulator("DelayedContracts");
-    createLongAccumulator("TotalRevenue");
+    createLongAccumulator("MonthlyGrossProfit");
+    createLongAccumulator("MonthlyNetProfit");
+    createLongAccumulator("MonthlyContractProfit");
 
     // Register Agents:
     registerAgentTypes(
@@ -33,14 +37,17 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
         DefaultClientCompany.class,
         JrConsultant.class,
         SrConsultant.class,
-        DefaultContractVisualization.class);
+        DefaultContractVisualization.class,
+        DefaultMarket.class);
 
     // Register Links (Messages):
     registerLinkTypes(
         Links.DeloitteClientLink.class,
         Links.DeloitteConsultantLink.class,
         Links.ConsultantLink.class,
-        Links.ContractToClient.class);
+        Links.ContractToClient.class,
+        Links.ClientCompanyMarketLink.class,
+        Links.DeloitteMarketLink.class);
 
     // Debugging Variable:
     createDoubleAccumulator("srEmploymentRate");
@@ -58,7 +65,17 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             getGlobals().deloitteAgent,
             a -> {
               a.name = "Deloitte";
-              a.market = new DefaultMarket();
+            });
+
+    // Initializing the market
+    Group<DefaultMarket> marketGroup =
+        generateGroup(
+            DefaultMarket.class,
+            1,
+            a -> {
+                a.businessCycle = new DefaultBusinessCycle();
+              a.srEmploymentMean = getGlobals().srEmploymentMean;
+              a.jrEmploymentMean = getGlobals().jrEmploymentMean;
             });
 
     // SrConsultant
@@ -69,6 +86,7 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             a -> {
               a.ranking = Ranking.SENIOR;
               a.generateAllowedOverlappedProjects();
+              a.generateSalary();
 
               // Todo: Ability to select min of agents in each discipline
               a.specialization = Specialization.generateNewRandomSpecialization();
@@ -87,6 +105,7 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             a -> {
               a.ranking = Ranking.JUNIOR;
               a.generateAllowedOverlappedProjects();
+              a.generateSalary();
 
               // Todo: Ability to select min of agents in each discipline
               a.specialization = Specialization.generateNewRandomSpecialization();
@@ -140,6 +159,14 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     jrConsultantGroup.fullyConnected(srConsultantGroup, Links.ConsultantLink.class);
     srConsultantGroup.fullyConnected(jrConsultantGroup, Links.ConsultantLink.class);
 
+    // Market - Deloitte links
+    deloitteGroup.fullyConnected(marketGroup, Links.DeloitteMarketLink.class);
+    marketGroup.fullyConnected(deloitteGroup, Links.DeloitteMarketLink.class);
+
+    // Market - ClientCompany
+    clientCompanyGroup.fullyConnected(marketGroup, Links.ClientCompanyMarketLink.class);
+    marketGroup.fullyConnected(clientCompanyGroup, Links.ClientCompanyMarketLink.class);
+
     super.setup();
   }
 
@@ -184,26 +211,24 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
 
     // Hiring More consultants
     run(Deloitte.hireConsultants);
-    // Todo: Need to register the new hires!!!
-
-    /*
-    if (getGlobals().missingSrAgents > getGlobals().allowedMissedContracts
-            || getGlobals().missingJrAgents > getGlobals().allowedMissedContracts) {
-        run(Deloitte.hireConsultants);
-        run(
-                Split.create(SrConsultant.registerWithFirm, JrConsultant.registerWithFirm),
-                Deloitte.registerConsultants);
+    if (getGlobals().hasHiredConsultants) {
+      run(
+          Split.create(SrConsultant.registerWithFirm, JrConsultant.registerWithFirm),
+          Deloitte.registerConsultants);
+      getGlobals().hasHiredConsultants = false;
     }
-    getGlobals().missingSrAgents = 0;
-    getGlobals().missingJrAgents = 0;
-     */
 
+    // Register Monthly Revenue:
+    run(
+        Split.create(SrConsultant.revenueNsalarySend, JrConsultant.revenueNsalarySend),
+        Deloitte.profitNloss);
+
+    run(DefaultMarket.updateEmploymentRate);
+    run(DefaultMarket.updateMarketCycle);
     // Iteration Global Updates:
     // Updating market rate for consultants:
     // FIXME: should be more natural not hardcoded defaultMarket
-    DefaultMarket.updateEmploymentRate(getGlobals().srEmploymentMean, true);
-    DefaultMarket.updateEmploymentRate(getGlobals().jrEmploymentMean, false);
-    getDoubleAccumulator("srEmploymentRate").add(DefaultMarket.srEmploymentRate);
-    getDoubleAccumulator("jrEmploymentRate").add(DefaultMarket.jrEmploymentRate);
+    getDoubleAccumulator("srEmploymentRate").add(getGlobals().srEmploymentMean);
+    getDoubleAccumulator("jrEmploymentRate").add(getGlobals().jrEmploymentMean);
   }
 }
