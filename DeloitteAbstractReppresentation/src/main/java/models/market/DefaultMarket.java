@@ -5,6 +5,7 @@ import simudyne.core.annotations.Variable;
 
 public class DefaultMarket extends SuperMarket {
 
+  @Variable public double marketValueStart = 1;
   @Variable public double marketValue = 1;
 
   public BusinessCycle businessCycle;
@@ -15,12 +16,7 @@ public class DefaultMarket extends SuperMarket {
   public static Action<DefaultMarket> updateEmploymentRate =
       Action.create(DefaultMarket.class, SuperMarket::employmentUpdateRate);
 
-    public void getMarketValue() {
-
-        marketValue = businessCycle.;
-
-
-
-
-    }
+  public void getMarketValue() {
+    marketValue = businessCycle.getMonthlyMarketValue(marketValueStart, getContext().getTick());
+  }
 }
