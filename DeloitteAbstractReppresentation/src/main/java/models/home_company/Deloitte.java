@@ -9,11 +9,14 @@ public class Deloitte extends SuperHomeCompany implements HomeCompany {
    * Action Implementations:
    *******************************/
 
+  public static Action<Deloitte> registerWithMarket =
+      Action.create(Deloitte.class, SuperHomeCompany::registerWithMarketMethod);
+
   public static Action<Deloitte> registerConsultants =
       Action.create(
           Deloitte.class,
           a -> {
-            a.getMessagesOfType(Messages.Registration.class).forEach(a::consultantSetup);
+            a.getMessagesOfType(Messages.RegistrationConsultant.class).forEach(a::consultantSetup);
           });
 
   public static Action<Deloitte> contractReview =
@@ -39,4 +42,4 @@ public class Deloitte extends SuperHomeCompany implements HomeCompany {
             a.getMessagesOfType(Messages.PandL.class).forEach(a::calculatePNLEachConsultant);
             a.retainedProfit();
           });
-    }
+}

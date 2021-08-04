@@ -1,4 +1,4 @@
-package models.market;
+package models.market_enviroment;
 
 public interface Market {
 

@@ -1,7 +1,5 @@
 package models.SimpleFirmModel.parameters;
 
-import models.market.DefaultMarket;
-import models.market.Market;
 import simudyne.core.abm.GlobalState;
 import simudyne.core.annotations.Constant;
 import simudyne.core.annotations.Input;
@@ -62,9 +60,28 @@ public class Globals extends GlobalState {
   public int SrRevenue = 2500;
 
   // Companies
-  @Input(name = "C) Companies #")
+  @Input(name = "Comp) Companies #")
   public long nbCompanies = 5;
+
+  @Input(name = "Comp) Contracts #")
+  public int nbContracts = 5;
+
+  // Market
+  @Input(name = "Market) Market Start")
+  public double marketStart = 1;
+
+  @Input(name = "Market) Set to constant Growth) ")
+  public boolean setMarketConstantGrowth = false;
+
+  @Input(name = "Market) Constant Growth rate) ")
+  public double marketGrowth = 0.02;
 
   // Hidden Variables
   public boolean hasHiredConsultants = false;
+  public int counter = 0;
+
+  // Hidden Functions
+  public void incrementCounter() {
+    counter++;
+  }
 }

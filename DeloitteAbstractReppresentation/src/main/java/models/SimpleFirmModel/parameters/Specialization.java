@@ -31,4 +31,8 @@ public enum Specialization {
   public Specialization skip(int amount) {
     return vals[(this.ordinal() + amount) % vals.length];
   }
+
+  public static Specialization assignNumeric(int pos) {
+    return vals[pos];
+  }
 }

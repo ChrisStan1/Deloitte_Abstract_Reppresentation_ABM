@@ -8,7 +8,7 @@ import java.util.Random;
 public class SrConsultant extends SuperConsultant implements Consultant {
 
   public static Action<SrConsultant> registerWithFirm =
-      Action.create(SrConsultant.class, SuperConsultant::registerWithFirmMethodMessage);
+      Action.create(SrConsultant.class, SuperConsultant::registerWithFirmMethod);
 
   public static Action<SrConsultant> consultantRequest =
       Action.create(
@@ -37,7 +37,7 @@ public class SrConsultant extends SuperConsultant implements Consultant {
 
   @Override
   public void generateSalary() {
-    this.salary = (getGlobals().SrSalary + (long) new Random().nextDouble() * 10000)*30;
+    salary = (getGlobals().SrSalary + (long) new Random().nextDouble() * 10000)*30; //30 because of 30 days in 1 month.
   }
 
   @Override

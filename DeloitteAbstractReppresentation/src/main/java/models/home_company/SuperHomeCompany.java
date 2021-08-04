@@ -1,14 +1,13 @@
 package models.home_company;
 
+import models.SimpleFirmModel.Links;
 import models.SimpleFirmModel.Messages;
-import models.SimpleFirmModel.SimpleFirmModel;
 import models.SimpleFirmModel.parameters.Globals;
 import models.SimpleFirmModel.parameters.Ranking;
 import models.SimpleFirmModel.parameters.Specialization;
 import models.client_contract.ClientContract;
 import models.consultant.JrConsultant;
 import models.consultant.SrConsultant;
-import models.market.Market;
 import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 
@@ -26,7 +25,6 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   // Printed:
   @Variable public String name;
 
-
   /*******************************
    * Consultants Information:
    *******************************/
@@ -42,13 +40,13 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   public Specialization missingSrAgentSpecialization;
 
   // Keeping Track of Available agents in each discipline:
-  public Queue<Long> fiSrLL = new LinkedList<>();
-  public Queue<Long> indSrLL = new LinkedList<>();
-  public Queue<Long> techSrLL = new LinkedList<>();
+  public Queue<Long> fiSrQueue = new LinkedList<>();
+  public Queue<Long> indSrQueue = new LinkedList<>();
+  public Queue<Long> techSrQueue = new LinkedList<>();
 
-  public Queue<Long> fiJrLL = new LinkedList<>();
-  public Queue<Long> indJrLL = new LinkedList<>();
-  public Queue<Long> techJrLL = new LinkedList<>();
+  public Queue<Long> fiJrQueue = new LinkedList<>();
+  public Queue<Long> indJrQueue = new LinkedList<>();
+  public Queue<Long> techJrQueue = new LinkedList<>();
 
   // Keeping Track of all Consultants Specializations, AvailableSlots & Ranking:
   public HashMap<Long, Specialization> consSpecializationMap = new HashMap<>();
@@ -65,21 +63,21 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     switch (specialization) {
       case FINANCE:
         if (ranking == SENIOR) {
-          return fiSrLL;
+          return fiSrQueue;
         } else {
-          return fiJrLL;
+          return fiJrQueue;
         }
       case INDUSTRIAL:
         if (ranking == SENIOR) {
-          return indSrLL;
+          return indSrQueue;
         } else {
-          return indJrLL;
+          return indJrQueue;
         }
       case TECHNOLOGY:
         if (ranking == SENIOR) {
-          return techSrLL;
+          return techSrQueue;
         } else {
-          return techJrLL;
+          return techJrQueue;
         }
     }
     return null;
@@ -90,23 +88,23 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     switch (specialization) {
       case FINANCE:
         if (ranking == SENIOR) {
-          fiSrLL.add(id);
+          fiSrQueue.add(id);
         } else {
-          fiJrLL.add(id);
+          fiJrQueue.add(id);
         }
         break;
       case INDUSTRIAL:
         if (ranking == SENIOR) {
-          indSrLL.add(id);
+          indSrQueue.add(id);
         } else {
-          indJrLL.add(id);
+          indJrQueue.add(id);
         }
         break;
       case TECHNOLOGY:
         if (ranking == SENIOR) {
-          techSrLL.add(id);
+          techSrQueue.add(id);
         } else {
-          techJrLL.add(id);
+          techJrQueue.add(id);
         }
         break;
     }
@@ -129,7 +127,17 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   /*******************************
    * Function Implementations:
    *******************************/
-  public void consultantSetup(Messages.Registration msg) {
+
+  public void registerWithMarketMethod() {
+    getLinks(Links.DeloitteMarketLink.class)
+        .send(
+            Messages.MarketRegistrationHomeCompany.class,
+            (msg, link) -> {
+              msg.ID = getID();
+            });
+  }
+
+  public void consultantSetup(Messages.RegistrationConsultant msg) {
 
     if (!consSpecializationMap.containsKey(msg.getSender())) {
       consSpecializationMap.put(msg.getSender(), msg.specialization);
@@ -436,5 +444,6 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
 
   public void contractCompleted(long id) {
     send(Messages.CompletedContract.class).to(id);
+    // Todo: Make client company quit if it has been told by the market...
   }
 }

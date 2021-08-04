@@ -9,13 +9,15 @@ import models.client_contract.DefaultContractVisualization;
 import models.consultant.JrConsultant;
 import models.consultant.SrConsultant;
 import models.home_company.Deloitte;
-import models.market.BusinessCycle;
-import models.market.DefaultBusinessCycle;
-import models.market.DefaultMarket;
+import models.market_enviroment.ConstantBusinessCycle;
+import models.market_enviroment.DefaultBusinessCycle;
+import models.market_enviroment.DefaultMarket;
 import simudyne.core.abm.AgentBasedModel;
 import simudyne.core.abm.Group;
 import simudyne.core.abm.Split;
 import simudyne.core.annotations.ModelSettings;
+
+import java.util.Random;
 
 // This Function represents the amount of ticks to progress:
 @ModelSettings(macroStep = 100)
@@ -73,7 +75,17 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             DefaultMarket.class,
             1,
             a -> {
-                a.businessCycle = new DefaultBusinessCycle();
+              a.name = "Market";
+              a.agentID = a.getID();
+
+              // Setting Up environment market:
+              if (getGlobals().setMarketConstantGrowth) {
+                a.businessCycle = new ConstantBusinessCycle(getGlobals().marketStart);
+              } else {
+                a.businessCycle = new DefaultBusinessCycle(getGlobals().marketStart);
+              }
+
+              // Setting Up Employment Rate:
               a.srEmploymentMean = getGlobals().srEmploymentMean;
               a.jrEmploymentMean = getGlobals().jrEmploymentMean;
             });
@@ -122,21 +134,23 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             DefaultClientCompany.class,
             getGlobals().nbCompanies,
             a -> {
+
               // Company Characteristics Setup;
               a.name = "Company # " + a.getID();
-              a.compSpecialization = Specialization.generateNewRandomSpecialization();
 
+              // Company Specialization Setup:
+              if (getGlobals().counter < 3) {
+                a.compSpecialization = Specialization.assignNumeric(getGlobals().counter);
+              } else {
+                a.compSpecialization = Specialization.generateNewRandomSpecialization();
+              }
               // Contract Characteristics Setup
+              a.nbSimultaneousContracts = getGlobals().nbContracts + new Random().nextInt(5);
               a.contractGenerationStrategy = new DefaultContractGenerationStrategy();
-
-              /*
-              // Selecting ContractGeneration Strategy;
-              // a.newContractStrategy = new DefaultNeedNewContractStrategy();
-              a.newContractStrategy = new AlwaysNeedNewContractStrategy();
-               */
 
               // Debugging: (Note only showing the first generated Contract)
               a.dbCompSpecialization = a.compSpecialization.toString();
+              getGlobals().incrementCounter();
             });
 
     // Deloitte - ClientCompany links
@@ -151,11 +165,11 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     deloitteGroup.fullyConnected(jrConsultantGroup, Links.DeloitteConsultantLink.class);
     jrConsultantGroup.fullyConnected(deloitteGroup, Links.DeloitteConsultantLink.class);
 
-    // SrConsultants - SrConsultants links
+    // Consultants - Consultants links
     srConsultantGroup.fullyConnected(srConsultantGroup, Links.ConsultantLink.class);
     jrConsultantGroup.fullyConnected(jrConsultantGroup, Links.ConsultantLink.class);
 
-    // JrConsultants - JrConsultants links
+    // SrConsultants - JrConsultants links
     jrConsultantGroup.fullyConnected(srConsultantGroup, Links.ConsultantLink.class);
     srConsultantGroup.fullyConnected(jrConsultantGroup, Links.ConsultantLink.class);
 
@@ -176,6 +190,9 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
 
     // Setup Step
     if (getContext().getTick() == 0) {
+      run(
+          Split.create(Deloitte.registerWithMarket, DefaultClientCompany.registerWithMarket),
+          DefaultMarket.registerCompanies);
       run(
           Split.create(SrConsultant.registerWithFirm, JrConsultant.registerWithFirm),
           Deloitte.registerConsultants);
@@ -223,8 +240,11 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
         Split.create(SrConsultant.revenueNsalarySend, JrConsultant.revenueNsalarySend),
         Deloitte.profitNloss);
 
+    // Updating the World Market:
     run(DefaultMarket.updateEmploymentRate);
     run(DefaultMarket.updateMarketCycle);
+    run(DefaultMarket.updateClientCompanyMarket);
+
     // Iteration Global Updates:
     // Updating market rate for consultants:
     // FIXME: should be more natural not hardcoded defaultMarket

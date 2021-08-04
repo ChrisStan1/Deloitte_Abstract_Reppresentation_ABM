@@ -46,10 +46,10 @@ public abstract class SuperConsultant extends Agent<Globals> {
    * Implementation Of Agent Actions:
    ****************************************/
 
-  public void registerWithFirmMethodMessage() {
+  public void registerWithFirmMethod() {
     getLinks(Links.DeloitteConsultantLink.class)
         .send(
-            Messages.Registration.class,
+            Messages.RegistrationConsultant.class,
             (msg, link) -> {
               msg.overlappedProjects = nbAllowedOverlappedProjects;
               msg.specialization = specialization;

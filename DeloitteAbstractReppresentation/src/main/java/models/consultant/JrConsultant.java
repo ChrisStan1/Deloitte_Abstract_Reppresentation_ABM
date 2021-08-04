@@ -9,7 +9,7 @@ public class JrConsultant extends SuperConsultant implements Consultant {
 
   // Action used to register Consultants With Deloitte
   public static Action<JrConsultant> registerWithFirm =
-      Action.create(JrConsultant.class, SuperConsultant::registerWithFirmMethodMessage);
+      Action.create(JrConsultant.class, SuperConsultant::registerWithFirmMethod);
 
   public static Action<JrConsultant> consultantRequest =
       Action.create(
