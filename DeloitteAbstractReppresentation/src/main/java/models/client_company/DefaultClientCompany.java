@@ -1,8 +1,6 @@
 package models.client_company;
 
 import models.SimpleFirmModel.Messages;
-import models.home_company.Deloitte;
-import models.home_company.SuperHomeCompany;
 import simudyne.core.abm.Action;
 
 public class DefaultClientCompany extends SuperClientCompany {
@@ -29,15 +27,19 @@ public class DefaultClientCompany extends SuperClientCompany {
       Action.create(
           DefaultClientCompany.class,
           a -> {
-            a.getMessagesOfType(Messages.ContractProposalResponse.class)
-                .forEach(a::isContractAccepted);
+            a.getMessagesOfType(Messages.CompletedContract.class)
+                .forEach(a::contractCompletedMethod);
           });
+  public static Action<DefaultClientCompany> leveHomeCompany =
+      Action.create(
+          DefaultClientCompany.class,
+          a ->
+              a.getMessagesOfType(Messages.MarketClientCompanyQuit.class)
+                  .forEach(a::clientCompanyLeve));
 
   // Todo: Add Contract Limit:
   @Override
   protected boolean reachedContractLimit() {
     return false;
   }
-
-
 }

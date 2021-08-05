@@ -29,7 +29,10 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
 
     // Accumulators: (MonteCarlo Simulations)
     createLongAccumulator("DelayedContracts");
+    createLongAccumulator("MonthlyRevenue");
+    createLongAccumulator("MonthlySalary");
     createLongAccumulator("MonthlyGrossProfit");
+    createLongAccumulator("MonthlyEBIT");
     createLongAccumulator("MonthlyNetProfit");
     createLongAccumulator("MonthlyContractProfit");
 
@@ -243,7 +246,10 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     // Updating the World Market:
     run(DefaultMarket.updateEmploymentRate);
     run(DefaultMarket.updateMarketCycle);
-    run(DefaultMarket.updateClientCompanyMarket);
+    run(
+        DefaultMarket.updateClientCompanyMarket,
+        Split.create(
+            DefaultClientCompany.registerWithMarket, DefaultClientCompany.leveHomeCompany));
 
     // Iteration Global Updates:
     // Updating market rate for consultants:

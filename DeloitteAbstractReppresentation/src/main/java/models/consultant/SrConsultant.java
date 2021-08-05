@@ -37,7 +37,9 @@ public class SrConsultant extends SuperConsultant implements Consultant {
 
   @Override
   public void generateSalary() {
-    salary = (getGlobals().SrSalary + (long) new Random().nextDouble() * 10000)*30; //30 because of 30 days in 1 month.
+    this.salary =
+        ((new Random().nextDouble() * 1000) + getGlobals().SrSalary)
+            * 20; // *20 because its a working Month
   }
 
   @Override

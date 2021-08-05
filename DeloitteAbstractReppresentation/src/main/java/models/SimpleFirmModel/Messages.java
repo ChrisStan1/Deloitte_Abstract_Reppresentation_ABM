@@ -8,11 +8,11 @@ import simudyne.core.graph.Message;
 
 public class Messages {
 
-  public static class MarketRegistrationHomeCompany extends Message{
+  public static class MarketRegistrationHomeCompany extends Message {
     public long ID;
   }
 
-  public static class MarketRegistrationClientCompany extends Message{
+  public static class MarketRegistrationClientCompany extends Message {
     public Specialization specialization;
     public long ID;
   }
@@ -42,21 +42,22 @@ public class Messages {
     public ClientContract lastContract;
   }
 
-  public static class ConsultantRequest extends Message{
+  public static class ConsultantRequest extends Message {
     public Specialization contSpecialization;
   }
 
-  public static class ConsultantReleased extends Message{
+  public static class ConsultantReleased extends Message {
     public Specialization contSpecialization;
   }
 
-  public static class CompletedContract extends Message{
+  public static class CompletedContract extends Message {
+    public long contID;
   }
 
-  public static class PandL extends Message{
+  public static class PNL extends Message {
     public long revenue;
-    public long salary;
+    public double salary;
   }
 
-
+  public static class MarketClientCompanyQuit extends Message {}
 }

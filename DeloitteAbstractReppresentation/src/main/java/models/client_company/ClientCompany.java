@@ -15,4 +15,6 @@ public interface ClientCompany {
   void createNewContractAgent(Messages.ContractProposalResponse msg);
 
   void registerWithMarketMethod();
+
+  void contractCompletedMethod(Messages.CompletedContract msg);
   }

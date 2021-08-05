@@ -9,6 +9,9 @@ import models.client_contract.DefaultContractVisualization;
 import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public abstract class SuperClientCompany extends Agent<Globals> implements ClientCompany {
 
   /*******************************
@@ -21,9 +24,13 @@ public abstract class SuperClientCompany extends Agent<Globals> implements Clien
 
   @Variable public int nbSimultaneousContracts;
 
+  @Variable public boolean isLeaving = false;
+
   // Hidden:
   public Specialization compSpecialization;
   public ContractGenerationStrategy contractGenerationStrategy;
+
+  public Queue<Long> runningContracts = new LinkedList<>();
 
   /****************************************
    * Function Implementations:
@@ -45,7 +52,7 @@ public abstract class SuperClientCompany extends Agent<Globals> implements Clien
 
     // Todo: Need to calibrate the nb of simultaneous contracts: (can make separate class always
     // accept or not)
-    if (!reachedContractLimit() && timeToNextContract-- <= 0) {
+    if (!reachedContractLimit() && timeToNextContract-- <= 0 && !isLeaving) {
       // Setting up a new contract:
       long contractID = contractGenerationStrategy.generateNewContractId();
       long contractSize = contractGenerationStrategy.generateNewContractSize();
@@ -63,6 +70,10 @@ public abstract class SuperClientCompany extends Agent<Globals> implements Clien
 
   // May vary between different Client company
   protected abstract boolean reachedContractLimit();
+
+  public void clientCompanyLeve(Messages.MarketClientCompanyQuit msg) {
+    isLeaving = true;
+  }
 
   /****************************************
    * Messages functions:
@@ -87,8 +98,8 @@ public abstract class SuperClientCompany extends Agent<Globals> implements Clien
   public void isContractAccepted(Messages.ContractProposalResponse msg) {
     if (msg.isAccepted) {
       createNewContractAgent(msg);
+      runningContracts.add(msg.contId);
     }
-    // Todo: Else something...
   }
 
   @Override
@@ -106,6 +117,15 @@ public abstract class SuperClientCompany extends Agent<Globals> implements Clien
           msg.lastContract.addContractVisualization(a);
         });
   }
+
+  @Override
+  public void contractCompletedMethod(Messages.CompletedContract msg) {
+      runningContracts.remove(msg.contID);
+      if(isLeaving && runningContracts.size()==0){
+          stop();
+      }
+  }
+
   /****************************************
    * Debugging Features:
    ****************************************/

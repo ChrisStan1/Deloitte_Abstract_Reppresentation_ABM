@@ -40,20 +40,22 @@ public class DefaultMarket extends SuperMarket {
 
     // If market is 50% above the mean, assign two new client company
     // If market is 20% above the mean, assign a new client company
+    // Will only join 5% of market or 1% of market size:
 
     marketPerformance = marketValue / marketValueStart;
 
     if (marketPerformance > 1.50 && clientMarketWouldAllow(0.005)) {
-      spawnNewClientCompany(2);
+      spawnNewClientCompany((int) Math.ceil(clientCompanyQueue.size() * 0.05));
     }
     if (marketPerformance > 1.20 && clientMarketWouldAllow(0.025)) {
-      spawnNewClientCompany(1);
+      spawnNewClientCompany((int) Math.ceil(clientCompanyQueue.size() * 0.005));
     }
-    if (marketPerformance < 0.20 && clientMarketWouldAllow(0.025)) {
-      quitClientCompany(1);
+    if (
+    /*marketPerformance < 0.20 &&*/ clientMarketWouldAllow(0.025)) {
+      quitClientCompany((int) Math.ceil(clientCompanyQueue.size() * 0.005));
     }
     if (marketPerformance < 0.50 && clientMarketWouldAllow(0.005)) {
-      quitClientCompany(2);
+      quitClientCompany((int) Math.ceil(clientCompanyQueue.size() * 0.05));
     }
   }
 

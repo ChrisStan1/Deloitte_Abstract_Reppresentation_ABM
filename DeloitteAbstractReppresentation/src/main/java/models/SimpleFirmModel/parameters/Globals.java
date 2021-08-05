@@ -11,7 +11,14 @@ public class Globals extends GlobalState {
   public int deloitteAgent = 1;
 
   @Input(name = "Home) Fixed Costs")
-  public int deloitteFixedCosts = 10000000;
+  public int deloitteFixedCosts = 1000000;
+
+  @Input(name = "Home) Interest cost")
+  public int deloitteInterestCost = 100000;
+
+  @Input(name = "Home) Corporate tax rate")
+  public double deloitteCorporateTaxRate = 0.2;
+
 
   // Consultants
   @Input(name = "Cons) SrConsultants #")
@@ -48,10 +55,10 @@ public class Globals extends GlobalState {
   public double allowedMissedContracts = 1;
 
   @Input(name = "Salary) Jr AvgSalary")
-  public int JrSalary = 1000;
+  public int JrSalary = 200;
 
   @Input(name = "Salary) Sr AvgSalary")
-  public int SrSalary = 2000;
+  public int SrSalary = 750;
 
   @Input(name = "Revenue) Jr AvgSalary")
   public int JrRevenue = 1500;

@@ -25,6 +25,11 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   // Printed:
   @Variable public String name;
 
+  // P&L calculation Variables:
+  long currentGrossProfit = 0;
+  long currentEBIT = 0;
+  long currentNetProfit = 0;
+
   /*******************************
    * Consultants Information:
    *******************************/
@@ -180,7 +185,6 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
 
       // Function tell client if contract is accepted or not:
       sendContractProposalResponseMessage(true, getLastContract(), msg);
-
     }
     // Otherwise return false:
     else {
@@ -192,12 +196,12 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
 
     // Todo: Check the remaining quarter is available...
     boolean isAvailable = true;
-    if (getLLQueue(specialization, SENIOR).size() <= minNbSrCons) {
+    if (getLLQueue(specialization, SENIOR).size() < minNbSrCons) {
       missingSrAgents++;
       missingSrAgentSpecialization = specialization;
       isAvailable = false;
     }
-    if (getLLQueue(specialization, JUNIOR).size() <= minNbJrCons) {
+    if (getLLQueue(specialization, JUNIOR).size() < minNbJrCons) {
       missingJrAgents++;
       missingJrAgentSpecialization = specialization;
       isAvailable = false;
@@ -324,7 +328,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
       // Todo: Add to total Revenue:
 
       // Stop Visualization
-      contractCompleted(compContract.getClientCompanyID());
+      contractCompleted(compContract.getClientCompanyID(), compContract.getContractID());
 
       ArrayList<Long> agentsFreedSr = usedSrAgents.get(compContract.getContractID());
       ArrayList<Long> agentsFreedJr = usedJrAgents.get(compContract.getContractID());
@@ -388,20 +392,45 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
         });
   }
 
-  // Todo: Check
-  public void calculatePNLEachConsultant(Messages.PandL PNL) {
-    getLongAccumulator("MonthlyGrossProfit").add(PNL.revenue);
-    getLongAccumulator("MonthlyNetProfit").add(PNL.revenue - PNL.salary);
+  public void calculatePNLEachConsultant(Messages.PNL PNL) {
+    getLongAccumulator("MonthlyRevenue").add(PNL.revenue);
+    // Todo: Make sure salary is randomized...
+    getLongAccumulator("MonthlySalary").add((long) PNL.salary);
+    getLongAccumulator("MonthlyGrossProfit").add((long) (PNL.revenue - PNL.salary));
+    currentGrossProfit += PNL.revenue - PNL.salary;
   }
 
-  public void retainedProfit() {
+  public void netProfit() {
+
+    // Fixed Costs & Interest & Tax
+    currentEBIT = currentGrossProfit - getGlobals().deloitteFixedCosts;
+    getLongAccumulator("MonthlyEBIT").add(currentEBIT);
+
+    currentNetProfit = (long) (getEarningsAfterInterest(currentEBIT) - getTotalTax(currentEBIT));
+    getLongAccumulator("MonthlyNetProfit").add(currentNetProfit);
+
+    // Looking only at Completed Contracts:
     for (ClientContract contract : completedContracts) {
       getLongAccumulator("MonthlyContractProfit").add(contract.getSize());
     }
     getLongAccumulator("MonthlyContractProfit")
         .add(getLongAccumulator("MonthlyContractProfit").value() - getGlobals().deloitteFixedCosts);
-    // Remove completed contracts
+
+    // Remove completed contracts & Reset Calculations
     completedContracts.clear();
+    currentGrossProfit = 0;
+    currentEBIT = 0;
+    currentNetProfit = 0;
+  }
+
+  // Tax Cost Calculation:
+  private double getTotalTax(long currentEBIT) {
+    return getEarningsAfterInterest(currentEBIT) * getGlobals().deloitteCorporateTaxRate;
+  }
+
+  // Interest Cost Calculation:
+  private long getEarningsAfterInterest(long currentEBIT) {
+    return currentEBIT - getGlobals().deloitteInterestCost;
   }
 
   /************************************
@@ -442,8 +471,13 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
         .to(id);
   }
 
-  public void contractCompleted(long id) {
-    send(Messages.CompletedContract.class).to(id);
+  public void contractCompleted(long clientCompanyID, long contractId) {
+    send(
+            Messages.CompletedContract.class,
+            msg -> {
+              msg.contID = contractId;
+            })
+        .to(clientCompanyID);
     // Todo: Make client company quit if it has been told by the market...
   }
 }

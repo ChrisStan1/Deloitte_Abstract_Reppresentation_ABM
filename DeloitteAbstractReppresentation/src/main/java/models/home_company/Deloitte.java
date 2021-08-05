@@ -39,7 +39,7 @@ public class Deloitte extends SuperHomeCompany implements HomeCompany {
       Action.create(
           Deloitte.class,
           a -> {
-            a.getMessagesOfType(Messages.PandL.class).forEach(a::calculatePNLEachConsultant);
-            a.retainedProfit();
+            a.getMessagesOfType(Messages.PNL.class).forEach(a::calculatePNLEachConsultant);
+            a.netProfit();
           });
 }

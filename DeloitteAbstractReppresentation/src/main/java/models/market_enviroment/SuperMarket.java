@@ -9,10 +9,7 @@ import models.client_contract.DefaultContractGenerationStrategy;
 import simudyne.core.abm.Agent;
 import simudyne.core.annotations.Variable;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Random;
+import java.util.*;
 
 public abstract class SuperMarket extends Agent<Globals> implements Market {
 
@@ -24,6 +21,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
 
   // Keeping Track of Basic company Information:
   public Queue<Long> homeCompanyQueue = new LinkedList<>();
+  public List<Long> clientCompanyQueue = new ArrayList<>();
   public HashMap<Long, Specialization> compSpecializationMap = new HashMap<>();
 
   @Override
@@ -55,6 +53,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
   public void clientCompanySetup(Messages.MarketRegistrationClientCompany msg) {
     if (!compSpecializationMap.containsKey(msg.ID)) {
       compSpecializationMap.put(msg.ID, msg.specialization);
+      clientCompanyQueue.add(msg.ID);
     }
   }
 
@@ -71,7 +70,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
             a.compSpecialization = Specialization.generateNewRandomSpecialization();
 
             // Contract Characteristics Setup
-            // Todo: I dont know how to fix this exact problem...
+            // Todo: I don't know how to fix this exact problem...
             a.nbSimultaneousContracts = /*getGlobals().nbContracts +*/ new Random().nextInt(5);
             a.contractGenerationStrategy = new DefaultContractGenerationStrategy();
 
@@ -86,9 +85,17 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
     }
   }
 
-  public void quitClientCompany(int i) {
+  public void quitClientCompany(int nbQuits) {
     // Send message No more contracts to be sent:
     // When deloitte send a message contract completion, stop client company...
+    // There has to be at least 1 company at any one time
+    if (clientCompanyQueue.size() <= 1) {
+      for (int i = 0; i < nbQuits; i++) {
+        int compQuit = new Random().nextInt(clientCompanyQueue.size());
+        send(Messages.MarketClientCompanyQuit.class).to(clientCompanyQueue.get(compQuit));
+        clientCompanyQueue.remove(compQuit);
+      }
+    }
   }
 
   abstract void getMarketValue();

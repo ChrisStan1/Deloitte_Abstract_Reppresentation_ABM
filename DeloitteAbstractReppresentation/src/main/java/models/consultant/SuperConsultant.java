@@ -24,7 +24,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
   @Variable public double efficiency = 1.0;
   @Variable public int monthsBenched = 0;
   @Variable public long revenue = 0;
-  @Variable public long salary;
+  @Variable public double salary = 0;
 
   // Hidden:
   public Specialization specialization;
@@ -156,13 +156,13 @@ public abstract class SuperConsultant extends Agent<Globals> {
 
   void revenueCalibrationNewContract(int agentRevenue) {
     if (nbProjects == 1) {
-      revenue = (agentRevenue * 30L); // 2500 a day... 2500*30 per month!
-      basicRevenue = (agentRevenue * 30L);
+      revenue = (agentRevenue * 20L); // 2500 a day... 2500*20 working days per month!
+      basicRevenue = (agentRevenue * 20L);
     }
 
-    // Bonus on working on multiple projects:
+    // Working on multiple projects:
     if (nbProjects > 1) {
-      basicRevenue *= 1.05;
+      basicRevenue += 1.05 * agentRevenue;
     }
 
     // Effect caused by efficiency:
@@ -172,8 +172,8 @@ public abstract class SuperConsultant extends Agent<Globals> {
   void revenueCalibrationContractRelease(int agentRevenue) {
     // If not not working no revenue;
     if (nbProjects == 0) {
-      revenue = (agentRevenue * 30L); // 2500 a day... 2500*30 per month!
-      basicRevenue = (agentRevenue * 30L);
+      revenue = 0;
+      basicRevenue = 0;
     }
 
     if (nbProjects != 0) {
@@ -187,7 +187,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
   public void revenueNsalaryMessage() {
     getLinks(Links.DeloitteConsultantLink.class)
         .send(
-            Messages.PandL.class,
+            Messages.PNL.class,
             (msg, link) -> {
               msg.revenue = revenue;
               msg.salary = salary;
