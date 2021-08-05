@@ -43,6 +43,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
   }
 
   // Keep Track of the homeCompanies:
+  @Override
   public void homeCompanySetup(Messages.MarketRegistrationHomeCompany msg) {
     if (!homeCompanyQueue.contains(msg.ID)) {
       homeCompanyQueue.add(msg.ID);
@@ -50,6 +51,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
   }
 
   // Keep Track of the ClientCompanies:
+  @Override
   public void clientCompanySetup(Messages.MarketRegistrationClientCompany msg) {
     if (!compSpecializationMap.containsKey(msg.ID)) {
       compSpecializationMap.put(msg.ID, msg.specialization);
@@ -57,6 +59,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
     }
   }
 
+  @Override
   public void spawnNewClientCompany(int nbSpawns) {
 
     for (int i = 0; i < nbSpawns; i++) {
@@ -85,6 +88,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
     }
   }
 
+  @Override
   public void quitClientCompany(int nbQuits) {
     // Send message No more contracts to be sent:
     // When deloitte send a message contract completion, stop client company...

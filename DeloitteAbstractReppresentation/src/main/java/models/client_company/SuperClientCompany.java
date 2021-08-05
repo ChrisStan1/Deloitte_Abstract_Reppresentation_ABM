@@ -71,6 +71,7 @@ public abstract class SuperClientCompany extends Agent<Globals> implements Clien
   // May vary between different Client company
   protected abstract boolean reachedContractLimit();
 
+  @Override
   public void clientCompanyLeve(Messages.MarketClientCompanyQuit msg) {
     isLeaving = true;
   }

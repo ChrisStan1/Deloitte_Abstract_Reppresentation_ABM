@@ -5,7 +5,7 @@ import simudyne.core.abm.Action;
 
 import java.util.Random;
 
-public class SrConsultant extends SuperConsultant implements Consultant {
+public class SrConsultant extends SuperConsultant {
 
   public static Action<SrConsultant> registerWithFirm =
       Action.create(SrConsultant.class, SuperConsultant::registerWithFirmMethod);
@@ -28,7 +28,7 @@ public class SrConsultant extends SuperConsultant implements Consultant {
       Action.create(SrConsultant.class, SuperConsultant::quitConsultant);
 
   public static Action<SrConsultant> revenueNsalarySend =
-      Action.create(SrConsultant.class, SuperConsultant::revenueNsalaryMessage);
+      Action.create(SrConsultant.class, SuperConsultant::revenueSalaryMessage);
 
   @Override
   public void generateAllowedOverlappedProjects() {

@@ -11,7 +11,7 @@ import simudyne.core.annotations.Variable;
 import java.util.HashMap;
 import java.util.Random;
 
-public abstract class SuperConsultant extends Agent<Globals> {
+public abstract class SuperConsultant extends Agent<Globals> implements Consultant {
 
   /****************************************
    * Agent Characteristics:
@@ -46,6 +46,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
    * Implementation Of Agent Actions:
    ****************************************/
 
+  @Override
   public void registerWithFirmMethod() {
     getLinks(Links.DeloitteConsultantLink.class)
         .send(
@@ -57,6 +58,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
             });
   }
 
+  @Override
   public void assignConsultant(Messages.ConsultantRequest msg) {
     if (msg.contSpecialization == specialization) {
       nbProjectsSameSpec++;
@@ -67,6 +69,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
     revenueCalculationNewContractGiven();
   }
 
+  @Override
   public void releaseConsultant(Messages.ConsultantReleased msg) {
     if (msg.contSpecialization == specialization) {
       nbProjectsSameSpec--;
@@ -77,6 +80,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
     revenueCalculationContractRelease();
   }
 
+  @Override
   public void quitConsultant() {
     // Check if the efficiency is to low,
     // if the have been benched for to long,
@@ -88,6 +92,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
     }
   }
 
+  @Override
   public boolean floatingConsultants() {
     // Keeping track if consultants are in use or not.
     if (nbProjects != 0) {
@@ -98,6 +103,7 @@ public abstract class SuperConsultant extends Agent<Globals> {
     }
   }
 
+  @Override
   public void spawnNewConsultant(
       Specialization newSpecialization,
       HashMap<Long, Specialization> consSpecializationMap,
@@ -122,9 +128,9 @@ public abstract class SuperConsultant extends Agent<Globals> {
     dbAgentStatus = ranking.toString();
   }
 
-  abstract void generateAllowedOverlappedProjects();
+  protected abstract void generateAllowedOverlappedProjects();
 
-  abstract void generateSalary();
+  protected abstract void generateSalary();
 
   /****************************************
    * Function to look at the revenue:
@@ -150,11 +156,12 @@ public abstract class SuperConsultant extends Agent<Globals> {
 
   // Each time there is a new job apply these parameters;
 
-  abstract void revenueCalculationNewContractGiven();
+  protected abstract void revenueCalculationNewContractGiven();
 
   abstract void revenueCalculationContractRelease();
 
-  void revenueCalibrationNewContract(int agentRevenue) {
+  @Override
+  public void revenueCalibrationNewContract(int agentRevenue) {
     if (nbProjects == 1) {
       revenue = (agentRevenue * 20L); // 2500 a day... 2500*20 working days per month!
       basicRevenue = (agentRevenue * 20L);
@@ -169,7 +176,8 @@ public abstract class SuperConsultant extends Agent<Globals> {
     revenue = (long) (basicRevenue - (basicRevenue * (0.15 * efficiency)));
   }
 
-  void revenueCalibrationContractRelease(int agentRevenue) {
+  @Override
+  public void revenueCalibrationContractRelease(int agentRevenue) {
     // If not not working no revenue;
     if (nbProjects == 0) {
       revenue = 0;
@@ -184,7 +192,8 @@ public abstract class SuperConsultant extends Agent<Globals> {
     revenue = (long) (basicRevenue - (basicRevenue * (0.15 * efficiency)));
   }
 
-  public void revenueNsalaryMessage() {
+  @Override
+  public void revenueSalaryMessage() {
     getLinks(Links.DeloitteConsultantLink.class)
         .send(
             Messages.PNL.class,

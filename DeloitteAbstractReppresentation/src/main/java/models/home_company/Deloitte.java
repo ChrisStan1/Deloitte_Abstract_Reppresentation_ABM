@@ -3,7 +3,7 @@ package models.home_company;
 import models.SimpleFirmModel.Messages;
 import simudyne.core.abm.Action;
 
-public class Deloitte extends SuperHomeCompany implements HomeCompany {
+public class Deloitte extends SuperHomeCompany {
 
   /*******************************
    * Action Implementations:

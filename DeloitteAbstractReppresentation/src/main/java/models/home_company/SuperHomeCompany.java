@@ -16,7 +16,7 @@ import java.util.*;
 import static models.SimpleFirmModel.parameters.Ranking.JUNIOR;
 import static models.SimpleFirmModel.parameters.Ranking.SENIOR;
 
-public abstract class SuperHomeCompany extends Agent<Globals> {
+public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCompany {
 
   /*******************************
    * Setting Up Agent Data members:
@@ -62,6 +62,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   HashMap<Long, ArrayList<Long>> usedSrAgents = new HashMap<>();
   HashMap<Long, ArrayList<Long>> usedJrAgents = new HashMap<>();
 
+  @Override
   // Priority Queue Management Functions:
   public Queue<Long> getLLQueue(Specialization specialization, Ranking ranking) {
 
@@ -88,6 +89,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     return null;
   }
 
+  @Override
   public void assignLLQueue(Specialization specialization, Ranking ranking, Long id) {
 
     switch (specialization) {
@@ -115,7 +117,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
-  private ClientContract getLastContract() {
+  @Override
+  public ClientContract getLastContract() {
     return runningContracts.get(runningContracts.size() - 1);
   }
 
@@ -133,6 +136,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
    * Function Implementations:
    *******************************/
 
+  @Override
   public void registerWithMarketMethod() {
     getLinks(Links.DeloitteMarketLink.class)
         .send(
@@ -142,6 +146,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
             });
   }
 
+  @Override
   public void consultantSetup(Messages.RegistrationConsultant msg) {
 
     if (!consSpecializationMap.containsKey(msg.getSender())) {
@@ -152,6 +157,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public void acceptContract(Messages.ContractProposal msg) {
     int minNbSrCons = (int) Math.ceil((msg.contSize / getGlobals().nbSrCPerProjectSize) * 0.75);
     int minNbJrCons = (int) Math.ceil((msg.contSize / getGlobals().nbJrCPerProjectSize) * 0.75);
@@ -192,6 +198,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public boolean availableAgents(Specialization specialization, int minNbSrCons, int minNbJrCons) {
 
     // Todo: Check the remaining quarter is available...
@@ -215,6 +222,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public void assignConsultants(
       int nbConsultants,
       Queue<Long> consPQueue,
@@ -259,6 +267,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public void grabBenchedConsultants(
       int nbConsultants,
       Queue<Long> consPQueue,
@@ -283,6 +292,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public Queue<Long> availableQueue(Ranking ranking, Specialization contSpecialization) {
 
     if (getLLQueue(contSpecialization.skip(1), ranking).size()
@@ -293,6 +303,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public void agentRequestsCounter(Ranking ranking) {
     switch (ranking) {
       case SENIOR:
@@ -304,6 +315,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public void stepContract() {
     // Tick trough each contract:
     for (ClientContract contract : runningContracts) {
@@ -315,12 +327,14 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   }
 
   // Contract has Finished:
+  @Override
   public void contractsToBeTerminated(ClientContract clientContract) {
     completedContracts.add(clientContract);
     toBeRemovedContracts.add(clientContract);
   }
 
   // Release agents
+  @Override
   public void terminateContract() {
 
     for (ClientContract compContract : completedContracts) {
@@ -338,14 +352,16 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
-  private void releaseConsultants(ClientContract compContract, ArrayList<Long> agentsFreed) {
+  @Override
+  public void releaseConsultants(ClientContract compContract, ArrayList<Long> agentsFreed) {
     for (long id : agentsFreed) {
       releaseConsultantMessage(id, compContract.getSpecialization());
       updateAgentAvailability(id);
     }
   }
 
-  private void updateAgentAvailability(long id) {
+  @Override
+  public void updateAgentAvailability(long id) {
 
     // Updating AgentAvailability
     consAvailableSlots.put(id, consAvailableSlots.get(id) + 1);
@@ -358,6 +374,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
+  @Override
   public void hireConsultants() {
     if (missingSrAgents > getGlobals().allowedMissedContracts
         || missingJrAgents > getGlobals().allowedMissedContracts) {
@@ -374,7 +391,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     }
   }
 
-  private void spawnJrConsultant() {
+  @Override
+  public void spawnJrConsultant() {
     Specialization newSpecialization = missingJrAgentSpecialization;
     spawn(
         JrConsultant.class,
@@ -383,7 +401,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
         });
   }
 
-  private void spawnSrConsultant() {
+  @Override
+  public void spawnSrConsultant() {
     Specialization newSpecialization = missingSrAgentSpecialization;
     spawn(
         SrConsultant.class,
@@ -392,6 +411,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
         });
   }
 
+  @Override
   public void calculatePNLEachConsultant(Messages.PNL PNL) {
     getLongAccumulator("MonthlyRevenue").add(PNL.revenue);
     // Todo: Make sure salary is randomized...
@@ -400,6 +420,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
     currentGrossProfit += PNL.revenue - PNL.salary;
   }
 
+  @Override
   public void netProfit() {
 
     // Fixed Costs & Interest & Tax
@@ -424,12 +445,14 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
   }
 
   // Tax Cost Calculation:
-  private double getTotalTax(long currentEBIT) {
+  @Override
+  public double getTotalTax(long currentEBIT) {
     return getEarningsAfterInterest(currentEBIT) * getGlobals().deloitteCorporateTaxRate;
   }
 
   // Interest Cost Calculation:
-  private long getEarningsAfterInterest(long currentEBIT) {
+  @Override
+  public long getEarningsAfterInterest(long currentEBIT) {
     return currentEBIT - getGlobals().deloitteInterestCost;
   }
 
@@ -437,6 +460,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
    * Sending Messages Implementations:
    ************************************/
 
+  @Override
   public void requestConsultantMessage(long agentId, Specialization contSpecialization) {
     send(
             Messages.ConsultantRequest.class,
@@ -446,6 +470,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
         .to(agentId);
   }
 
+  @Override
   public void sendContractProposalResponseMessage(
       boolean isAccepted, ClientContract lastContract, Messages.ContractProposal from) {
     send(
@@ -462,6 +487,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
         .to(from.getSender());
   }
 
+  @Override
   public void releaseConsultantMessage(long id, Specialization contSpecialization) {
     send(
             Messages.ConsultantReleased.class,
@@ -471,6 +497,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> {
         .to(id);
   }
 
+  @Override
   public void contractCompleted(long clientCompanyID, long contractId) {
     send(
             Messages.CompletedContract.class,
