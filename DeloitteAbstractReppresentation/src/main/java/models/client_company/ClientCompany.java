@@ -1,3 +1,8 @@
+/**************************
+ * ClientCompany Interface
+ * By cas220
+ **************************/
+
 package models.client_company;
 
 import models.SimpleFirmModel.Messages;
@@ -9,8 +14,6 @@ public interface ClientCompany {
 
   void generateNewContract();
 
-  void clientCompanyLeve(Messages.MarketClientCompanyQuit msg);
-
   void sendContractProposal(
       long contId, long contSize, long contDuration, Specialization contSpecialization);
 
@@ -19,4 +22,6 @@ public interface ClientCompany {
   void createNewContractAgent(Messages.ContractProposalResponse msg);
 
   void contractCompletedMethod(Messages.CompletedContract msg);
+
+  void clientCompanyLeve(Messages.MarketClientCompanyQuit msg);
 }

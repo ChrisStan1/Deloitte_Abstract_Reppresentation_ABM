@@ -1,3 +1,9 @@
+/**************************
+ * DefaultContractVisualization
+ * Displays current running contracts in the network
+ * By cas220
+ **************************/
+
 package models.client_contract;
 
 import models.SimpleFirmModel.Links;
@@ -14,17 +20,15 @@ public class DefaultContractVisualization extends Agent<Globals> implements Cont
   @Variable public long contSize;
   @Variable public long contDuration;
 
-  /*
-  @Variable public int nbSrCons;
-  @Variable public int nbJrCons;
-   */
-
   // Hidden Variables
   public Specialization contSpecialization;
 
   // Debugging Variables
   @Variable public String dbContSpecialization;
 
+  /*******************************
+   * Action Implementations:
+   *******************************/
   public static Action<DefaultContractVisualization> stepContract =
       Action.create(
           DefaultContractVisualization.class,

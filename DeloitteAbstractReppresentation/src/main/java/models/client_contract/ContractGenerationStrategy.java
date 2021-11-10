@@ -1,5 +1,9 @@
-package models.client_contract;
+/**************************
+ * ContractGenerationStrategy Interface
+ * By cas220
+ **************************/
 
+package models.client_contract;
 
 import models.SimpleFirmModel.parameters.Specialization;
 

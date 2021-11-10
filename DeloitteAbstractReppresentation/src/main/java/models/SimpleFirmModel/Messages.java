@@ -1,3 +1,10 @@
+/**************************
+ * Messages
+ * Responsible to setting up message paths between agents,
+ * and the contents of the messages
+ * By cas220
+ **************************/
+
 package models.SimpleFirmModel;
 
 import models.SimpleFirmModel.parameters.Ranking;
@@ -29,6 +36,20 @@ public class Messages {
     public long contDuration;
     public Specialization contSpecialization;
     public SuperClientCompany compClient;
+
+    @Override
+    public String toString() {
+      return "ContractId: "
+          + contId
+          + " contSize: "
+          + contSize
+          + " contDuration: "
+          + contDuration
+          + " contSpecialization: "
+          + contSpecialization
+          + " compClient: "
+          + compClient;
+    }
   }
 
   public static class ContractProposalResponse extends Message {

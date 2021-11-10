@@ -1,3 +1,9 @@
+/**************************
+ * SuperHomeCompany
+ * Super class for the consulting firm
+ * By cas220
+ **************************/
+
 package models.home_company;
 
 import models.SimpleFirmModel.Links;
@@ -59,12 +65,10 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
   public HashMap<Long, Ranking> consRankingMap = new HashMap<>();
 
   // Making a hash map to store all agents which are part of 1 key (project ID)
-  HashMap<Long, ArrayList<Long>> usedSrAgents = new HashMap<>();
-  HashMap<Long, ArrayList<Long>> usedJrAgents = new HashMap<>();
+  HashMap<Long, ArrayList<Long>> usedConsultingAgents = new HashMap<>();
 
-  @Override
   // Priority Queue Management Functions:
-  public Queue<Long> getLLQueue(Specialization specialization, Ranking ranking) {
+  protected Queue<Long> getLLQueue(Specialization specialization, Ranking ranking) {
 
     switch (specialization) {
       case FINANCE:
@@ -89,8 +93,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     return null;
   }
 
-  @Override
-  public void assignLLQueue(Specialization specialization, Ranking ranking, Long id) {
+  protected void assignLLQueue(Specialization specialization, Ranking ranking, Long id) {
 
     switch (specialization) {
       case FINANCE:
@@ -117,8 +120,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
-  @Override
-  public ClientContract getLastContract() {
+  // Getter function for the last emitted running contract
+  protected ClientContract getLastContract() {
     return runningContracts.get(runningContracts.size() - 1);
   }
 
@@ -136,6 +139,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
    * Function Implementations:
    *******************************/
 
+  // Method to register HomeCompany with market
   @Override
   public void registerWithMarketMethod() {
     getLinks(Links.DeloitteMarketLink.class)
@@ -146,6 +150,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
             });
   }
 
+  // Storing the appropriate consultant to their queue division
   @Override
   public void consultantSetup(Messages.RegistrationConsultant msg) {
 
@@ -157,10 +162,12 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
+  // Function responsible for accepting/ rejecting contracts.
+  // also responsible for initializing the consultant assignment process
   @Override
   public void acceptContract(Messages.ContractProposal msg) {
-    int minNbSrCons = (int) Math.ceil((msg.contSize / getGlobals().nbSrCPerProjectSize) * 0.75);
-    int minNbJrCons = (int) Math.ceil((msg.contSize / getGlobals().nbJrCPerProjectSize) * 0.75);
+    int minNbSrCons = (int) Math.ceil((msg.contSize / getGlobals().nbSrCPerProjectSize));
+    int minNbJrCons = (int) Math.ceil((msg.contSize / getGlobals().nbJrCPerProjectSize));
 
     // If available accept contract:
     if (availableAgents(msg.contSpecialization, minNbSrCons, minNbJrCons)) {
@@ -198,17 +205,22 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
-  @Override
-  public boolean availableAgents(Specialization specialization, int minNbSrCons, int minNbJrCons) {
+  // Method to check for agent availability for the new contract
+  protected boolean availableAgents(Specialization specialization, int nbSrCons, int nbJrCons) {
 
-    // Todo: Check the remaining quarter is available...
+    int minNbJrCons = (int) Math.ceil(nbJrCons * 0.75);
+    int minNbSrCons = (int) Math.ceil(nbSrCons * 0.75);
+
+    // At least 3/4 available same specialization
     boolean isAvailable = true;
-    if (getLLQueue(specialization, SENIOR).size() < minNbSrCons) {
+    if (getLLQueue(specialization, SENIOR).size() < minNbSrCons
+        || sumOfAvailableConsultants(SENIOR) < nbSrCons) {
       missingSrAgents++;
       missingSrAgentSpecialization = specialization;
       isAvailable = false;
     }
-    if (getLLQueue(specialization, JUNIOR).size() < minNbJrCons) {
+    if (getLLQueue(specialization, JUNIOR).size() < minNbJrCons
+        || sumOfAvailableConsultants(JUNIOR) < nbJrCons) {
       missingJrAgents++;
       missingJrAgentSpecialization = specialization;
       isAvailable = false;
@@ -222,8 +234,15 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
-  @Override
-  public void assignConsultants(
+  // Check if there are enough available consultant to fill the contract order
+  protected int sumOfAvailableConsultants(Ranking ranking) {
+    return getLLQueue(Specialization.FINANCE, ranking).size()
+        + getLLQueue(Specialization.INDUSTRIAL, ranking).size()
+        + getLLQueue(Specialization.TECHNOLOGY, ranking).size();
+  }
+
+  // Assigning the designated consultant to the incoming contract
+  protected void assignConsultants(
       int nbConsultants,
       Queue<Long> consPQueue,
       Specialization contSpecialization,
@@ -257,18 +276,12 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
       }
     }
 
-    // Keep Track of which agent is on which Project
-    switch (ranking) {
-      case SENIOR:
-        usedSrAgents.put(contId, removedId);
-        break;
-      case JUNIOR:
-        usedJrAgents.put(contId, removedId);
-    }
+    removedId.addAll(usedConsultingAgents.getOrDefault(contId, new ArrayList<>()));
+    usedConsultingAgents.put(contId, removedId);
   }
 
-  @Override
-  public void grabBenchedConsultants(
+  // Selecting available consultants
+  protected void grabBenchedConsultants(
       int nbConsultants,
       Queue<Long> consPQueue,
       ArrayList<Long> removedId,
@@ -292,8 +305,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
-  @Override
-  public Queue<Long> availableQueue(Ranking ranking, Specialization contSpecialization) {
+  // Method to pic the queue with the most available consulting by specialization.
+  protected Queue<Long> availableQueue(Ranking ranking, Specialization contSpecialization) {
 
     if (getLLQueue(contSpecialization.skip(1), ranking).size()
         > getLLQueue(contSpecialization.skip(2), ranking).size()) {
@@ -303,8 +316,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
-  @Override
-  public void agentRequestsCounter(Ranking ranking) {
+  // Tracker to see how many of each agent was requested.
+  protected void agentRequestsCounter(Ranking ranking) {
     switch (ranking) {
       case SENIOR:
         nbSeniorRequests++;
@@ -315,6 +328,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
+  // Function to step through contracts and update them.
   @Override
   public void stepContract() {
     // Tick trough each contract:
@@ -339,29 +353,25 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
 
     for (ClientContract compContract : completedContracts) {
 
-      // Todo: Add to total Revenue:
-
       // Stop Visualization
       contractCompleted(compContract.getClientCompanyID(), compContract.getContractID());
 
-      ArrayList<Long> agentsFreedSr = usedSrAgents.get(compContract.getContractID());
-      ArrayList<Long> agentsFreedJr = usedJrAgents.get(compContract.getContractID());
+      ArrayList<Long> freedAgents = usedConsultingAgents.get(compContract.getContractID());
 
-      releaseConsultants(compContract, agentsFreedSr);
-      releaseConsultants(compContract, agentsFreedJr);
+      releaseConsultants(compContract, freedAgents);
     }
   }
 
-  @Override
-  public void releaseConsultants(ClientContract compContract, ArrayList<Long> agentsFreed) {
+  // Function to release consultants form their old contract.
+  protected void releaseConsultants(ClientContract compContract, ArrayList<Long> agentsFreed) {
     for (long id : agentsFreed) {
       releaseConsultantMessage(id, compContract.getSpecialization());
       updateAgentAvailability(id);
     }
   }
 
-  @Override
-  public void updateAgentAvailability(long id) {
+  // Updating the agents availability within the queue.
+  protected void updateAgentAvailability(long id) {
 
     // Updating AgentAvailability
     consAvailableSlots.put(id, consAvailableSlots.get(id) + 1);
@@ -374,23 +384,29 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
     }
   }
 
+  // If there are missing agents registered Spawn new consultants in the desired specialization
   @Override
   public void hireConsultants() {
     if (missingSrAgents > getGlobals().allowedMissedContracts
         || missingJrAgents > getGlobals().allowedMissedContracts) {
-      if (missingSrAgents > 2 && getGlobals().srEmploymentMean > new Random().nextDouble()) {
-        spawnSrConsultant();
+      if (missingSrAgents > 5 && getGlobals().srEmploymentMean > new Random().nextDouble()) {
+        for (int i = 0; i < (Math.ceil(missingSrAgents * 0.25)); i++) {
+          spawnSrConsultant();
+        }
         missingSrAgents = 0;
         getGlobals().hasHiredConsultants = true;
       }
-      if (missingJrAgents > 2 && getGlobals().jrEmploymentMean > new Random().nextDouble()) {
-        spawnJrConsultant();
+      if (missingJrAgents > 5 && getGlobals().jrEmploymentMean > new Random().nextDouble()) {
+        for (int i = 0; i < (Math.ceil(missingJrAgents * 0.50)); i++) {
+          spawnJrConsultant();
+        }
         missingJrAgents = 0;
         getGlobals().hasHiredConsultants = true;
       }
     }
   }
 
+  // Spawning method for JrConsultants
   @Override
   public void spawnJrConsultant() {
     Specialization newSpecialization = missingJrAgentSpecialization;
@@ -401,6 +417,7 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
         });
   }
 
+  //  Spawning methods for SrConsultants
   @Override
   public void spawnSrConsultant() {
     Specialization newSpecialization = missingSrAgentSpecialization;
@@ -411,15 +428,16 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
         });
   }
 
+  // Profit and loss calculations
   @Override
   public void calculatePNLEachConsultant(Messages.PNL PNL) {
     getLongAccumulator("MonthlyRevenue").add(PNL.revenue);
-    // Todo: Make sure salary is randomized...
     getLongAccumulator("MonthlySalary").add((long) PNL.salary);
     getLongAccumulator("MonthlyGrossProfit").add((long) (PNL.revenue - PNL.salary));
     currentGrossProfit += PNL.revenue - PNL.salary;
   }
 
+  // Net profit and EBIT calculations
   @Override
   public void netProfit() {
 
@@ -445,23 +463,20 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
   }
 
   // Tax Cost Calculation:
-  @Override
-  public double getTotalTax(long currentEBIT) {
+  protected double getTotalTax(long currentEBIT) {
     return getEarningsAfterInterest(currentEBIT) * getGlobals().deloitteCorporateTaxRate;
   }
 
   // Interest Cost Calculation:
-  @Override
-  public long getEarningsAfterInterest(long currentEBIT) {
+  protected long getEarningsAfterInterest(long currentEBIT) {
     return currentEBIT - getGlobals().deloitteInterestCost;
   }
 
   /************************************
    * Sending Messages Implementations:
    ************************************/
-
-  @Override
-  public void requestConsultantMessage(long agentId, Specialization contSpecialization) {
+  // Sending message to consultant about the new contract
+  protected void requestConsultantMessage(long agentId, Specialization contSpecialization) {
     send(
             Messages.ConsultantRequest.class,
             msg -> {
@@ -470,8 +485,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
         .to(agentId);
   }
 
-  @Override
-  public void sendContractProposalResponseMessage(
+  // Replying to ClientCompany if contract was accepted
+  protected void sendContractProposalResponseMessage(
       boolean isAccepted, ClientContract lastContract, Messages.ContractProposal from) {
     send(
             Messages.ContractProposalResponse.class,
@@ -487,8 +502,8 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
         .to(from.getSender());
   }
 
-  @Override
-  public void releaseConsultantMessage(long id, Specialization contSpecialization) {
+  // Sending message to consultant about being released by old contract
+  protected void releaseConsultantMessage(long id, Specialization contSpecialization) {
     send(
             Messages.ConsultantReleased.class,
             msg -> {
@@ -497,14 +512,13 @@ public abstract class SuperHomeCompany extends Agent<Globals> implements HomeCom
         .to(id);
   }
 
-  @Override
-  public void contractCompleted(long clientCompanyID, long contractId) {
+  // Send message to ClientCompany that the contract is completed
+  protected void contractCompleted(long clientCompanyID, long contractId) {
     send(
             Messages.CompletedContract.class,
             msg -> {
               msg.contID = contractId;
             })
         .to(clientCompanyID);
-    // Todo: Make client company quit if it has been told by the market...
   }
 }

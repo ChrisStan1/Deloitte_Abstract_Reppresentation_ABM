@@ -1,8 +1,14 @@
+/**************************
+ * ClientContract
+ * This is the basis for every contract:
+ * By cas220
+ **************************/
+
 package models.client_contract;
 
 import models.SimpleFirmModel.parameters.Specialization;
-import models.home_company.SuperHomeCompany;
 import models.client_company.SuperClientCompany;
+import models.home_company.SuperHomeCompany;
 
 public class ClientContract implements Contract {
 
@@ -10,6 +16,7 @@ public class ClientContract implements Contract {
    * Contract Characteristics:
    ****************************************/
 
+  // Hidden Variables:
   private boolean completed = false;
 
   private final long size;
@@ -74,11 +81,12 @@ public class ClientContract implements Contract {
     return id;
   }
 
+  // Function responsible for updating the contract variables each month
   @Override
   public void updateContractTick() {
 
     if (duration <= 0) {
-       homeCompany.contractsToBeTerminated(this);
+      homeCompany.contractsToBeTerminated(this);
     } else {
       decreaseDuration();
     }

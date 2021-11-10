@@ -1,3 +1,8 @@
+/**************************
+ * Market interface
+ * By cas220
+ **************************/
+
 package models.market_enviroment;
 
 import models.SimpleFirmModel.Messages;

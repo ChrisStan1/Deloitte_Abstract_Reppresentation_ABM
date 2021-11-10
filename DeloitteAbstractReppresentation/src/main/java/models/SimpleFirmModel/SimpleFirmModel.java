@@ -1,4 +1,11 @@
-package models.SimpleFirmModel; /* ABM Initialization By CAS220 */
+/**************************
+ * SimpleFirmModel
+ * Main class for the model runs from
+ * By cas220
+ **************************/
+
+/* ABM Initialization By CAS220 */
+package models.SimpleFirmModel;
 
 import models.SimpleFirmModel.parameters.Globals;
 import models.SimpleFirmModel.parameters.Ranking;
@@ -168,13 +175,15 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     deloitteGroup.fullyConnected(jrConsultantGroup, Links.DeloitteConsultantLink.class);
     jrConsultantGroup.fullyConnected(deloitteGroup, Links.DeloitteConsultantLink.class);
 
-    // Consultants - Consultants links
-    srConsultantGroup.fullyConnected(srConsultantGroup, Links.ConsultantLink.class);
-    jrConsultantGroup.fullyConnected(jrConsultantGroup, Links.ConsultantLink.class);
+    // Consultants - Consultants links (Can be uncommented if the computing power is enough)
+    /*
+       srConsultantGroup.fullyConnected(srConsultantGroup, Links.ConsultantLink.class);
+       jrConsultantGroup.fullyConnected(jrConsultantGroup, Links.ConsultantLink.class);
 
-    // SrConsultants - JrConsultants links
-    jrConsultantGroup.fullyConnected(srConsultantGroup, Links.ConsultantLink.class);
-    srConsultantGroup.fullyConnected(jrConsultantGroup, Links.ConsultantLink.class);
+       // SrConsultants - JrConsultants links
+       jrConsultantGroup.fullyConnected(srConsultantGroup, Links.ConsultantLink.class);
+       srConsultantGroup.fullyConnected(jrConsultantGroup, Links.ConsultantLink.class);
+    */
 
     // Market - Deloitte links
     deloitteGroup.fullyConnected(marketGroup, Links.DeloitteMarketLink.class);
@@ -187,6 +196,7 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     super.setup();
   }
 
+  // Step function: This is a loop repeated for each step of the model.
   @Override
   public void step() {
     super.step();
@@ -225,8 +235,6 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
             JrConsultant.consultantReleased));
 
     // Consultants Quitting:
-    // Todo: Make Sure They don't quit when they still have a job:
-    // Todo: Make an action of resignation to deloitte to have them removed from the Queue
     run(Split.create(SrConsultant.consultantQuit, JrConsultant.consultantQuit));
 
     // Hiring More consultants
@@ -248,12 +256,11 @@ public class SimpleFirmModel extends AgentBasedModel<Globals> {
     run(DefaultMarket.updateMarketCycle);
     run(
         DefaultMarket.updateClientCompanyMarket,
-        Split.create(
-            DefaultClientCompany.registerWithMarket, DefaultClientCompany.leveHomeCompany));
+        Split.create(DefaultClientCompany.registerWithMarket, DefaultClientCompany.leveHomeCompany),
+        DefaultMarket.registerCompanies);
 
     // Iteration Global Updates:
     // Updating market rate for consultants:
-    // FIXME: should be more natural not hardcoded defaultMarket
     getDoubleAccumulator("srEmploymentRate").add(getGlobals().srEmploymentMean);
     getDoubleAccumulator("jrEmploymentRate").add(getGlobals().jrEmploymentMean);
   }

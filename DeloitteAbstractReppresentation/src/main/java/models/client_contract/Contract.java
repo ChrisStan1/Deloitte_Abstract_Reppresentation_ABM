@@ -1,3 +1,8 @@
+/**************************
+ * Contract Interface
+ * By cas220
+ **************************/
+
 package models.client_contract;
 
 import models.SimpleFirmModel.parameters.Specialization;

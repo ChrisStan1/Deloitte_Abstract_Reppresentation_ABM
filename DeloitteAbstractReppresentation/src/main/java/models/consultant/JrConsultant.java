@@ -1,3 +1,9 @@
+/**************************
+ * JrConsultant
+ * This definition of a jrConsultant
+ * By cas220
+ **************************/
+
 package models.consultant;
 
 import models.SimpleFirmModel.Messages;
@@ -6,6 +12,10 @@ import simudyne.core.abm.Action;
 import java.util.Random;
 
 public class JrConsultant extends SuperConsultant {
+
+  /*******************************
+   * Action Implementations:
+   *******************************/
 
   // Action used to register Consultants With Deloitte
   public static Action<JrConsultant> registerWithFirm =
@@ -28,26 +38,30 @@ public class JrConsultant extends SuperConsultant {
   public static Action<JrConsultant> consultantQuit =
       Action.create(JrConsultant.class, SuperConsultant::quitConsultant);
 
-  public static Action<SrConsultant> revenueNsalarySend =
-      Action.create(SrConsultant.class, SuperConsultant::revenueSalaryMessage);
+  public static Action<JrConsultant> revenueNsalarySend =
+      Action.create(JrConsultant.class, SuperConsultant::revenueSalaryMessage);
 
+  // Method to generate overlapping projects:
   public void generateAllowedOverlappedProjects() {
-    this.nbAllowedOverlappedProjects = new Random().nextInt(3) + 2;
+    this.nbAllowedOverlappedProjects = new Random().nextInt(2) + 1;
   }
 
+  // Method to generate salary
   @Override
   public void generateSalary() {
-    this.salary =
-        ((new Random().nextDouble() * 1000) + getGlobals().JrSalary)
-            * 20; // *20 because its a working Month
+    this.salary = getGlobals().JrSalary * 20; // *20 because its a working Month
+    // Possible introduction of randomization: ((new Random().nextDouble() * 1000) +
+    // getGlobals().JrSalary)
   }
 
+  // Acquiring the revenue rate of junior new contract
   @Override
   public void revenueCalculationNewContractGiven() {
     int agentRevenue = getGlobals().JrRevenue;
     revenueCalibrationNewContract(agentRevenue);
   }
 
+  // Acquiring the revenue rate of junior released form contract
   @Override
   void revenueCalculationContractRelease() {
     int agentRevenue = getGlobals().JrRevenue;

@@ -1,3 +1,9 @@
+/**************************
+ * SuperConsultant
+ * This is the super class for all consultants
+ * By cas220
+ **************************/
+
 package models.consultant;
 
 import models.SimpleFirmModel.Links;
@@ -18,26 +24,25 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
    ****************************************/
   // Printed:
   @Variable public int nbAllowedOverlappedProjects;
-
   @Variable public int nbProjectsSameSpec = 0;
   @Variable public int nbProjects = 0;
   @Variable public double efficiency = 1.0;
   @Variable public int monthsBenched = 0;
+  @Variable public double utilization = 1;
   @Variable public long revenue = 0;
   @Variable public double salary = 0;
 
   // Hidden:
   public Specialization specialization;
   public Ranking ranking;
-
+  public int daysAtFirm = 0;
   public long basicRevenue;
 
   /****************************************
    * Implementation Of Agent Functions:
    ****************************************/
 
-  // Todo: Ability to select min of agents in each discipline
-  // Todo: Implement a function to not randomise (IMPORTANT)
+  // Future function; at the moment consultants specializations are randomized.
   public Specialization assignAgentSpecialization() {
     return Specialization.values()[new Random().nextInt(Specialization.values().length)];
   }
@@ -46,6 +51,7 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
    * Implementation Of Agent Actions:
    ****************************************/
 
+  // Registering each consultant with HomeCompany to be assigned to contracts
   @Override
   public void registerWithFirmMethod() {
     getLinks(Links.DeloitteConsultantLink.class)
@@ -58,6 +64,7 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
             });
   }
 
+  // Consultant being assigned to a contracts upon request by HomeCompany
   @Override
   public void assignConsultant(Messages.ConsultantRequest msg) {
     if (msg.contSpecialization == specialization) {
@@ -69,6 +76,7 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
     revenueCalculationNewContractGiven();
   }
 
+  // Consultant completed contract
   @Override
   public void releaseConsultant(Messages.ConsultantReleased msg) {
     if (msg.contSpecialization == specialization) {
@@ -80,6 +88,7 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
     revenueCalculationContractRelease();
   }
 
+  // Function to check if a Consultant is quitting the HomeCompany
   @Override
   public void quitConsultant() {
     // Check if the efficiency is to low,
@@ -92,18 +101,29 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
     }
   }
 
-  @Override
-  public boolean floatingConsultants() {
+  // Function utilized to track the Utilization rate and months benched of consultants
+  private boolean floatingConsultants() {
+
+    // Keeping Track of The utilization:
+    if (nbProjects == 0) {
+      monthsBenched++;
+    }
+    daysAtFirm++;
+    // utilization =  (daysAtFirm - monthsBenched) / (double)daysAtFirm;
+    utilization =
+        (getGlobals().nbDaysBenched - monthsBenched) / (double) getGlobals().nbDaysBenched;
+
     // Keeping track if consultants are in use or not.
     if (nbProjects != 0) {
       monthsBenched = 0;
       return false;
     } else {
-      return monthsBenched++ >= getGlobals().nbDaysBenched;
+      // Return amount of time floating:
+      return monthsBenched >= getGlobals().nbDaysBenched;
     }
   }
 
-  @Override
+  // After a new hire, consultant agents have to be initialized
   public void spawnNewConsultant(
       Specialization newSpecialization,
       HashMap<Long, Specialization> consSpecializationMap,
@@ -116,20 +136,25 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
     generateAllowedOverlappedProjects();
     generateSalary();
 
-    // Linking the agent to everybody else!
+    // Linking the agent to every other agent.
     addLink(deloitteId, Links.DeloitteConsultantLink.class);
+
+    /* (If there is enough computing power uncomment these lines)
     consSpecializationMap.forEach(
         (conID, conSpec) -> {
           addLink(conID, Links.ConsultantLink.class);
         });
+     */
 
     // Debugging
     dbAgentSpecialization = specialization.toString();
     dbAgentStatus = ranking.toString();
   }
 
+  // Abstract function for Number of overlapping projects.
   protected abstract void generateAllowedOverlappedProjects();
 
+  // Abstract function to calculate the monthly salary of each agent.
   protected abstract void generateSalary();
 
   /****************************************
@@ -141,14 +166,6 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
   // 40 hours per week, 52 weeks per year, and 12 months per year: 40 hours per week x 52 weeks per
   // year / 12 months per year = 173.33 average monthly hours.
 
-  // Partners hour rate = 4000;
-  // Directors hour rate = 3500;
-  // SrManagers hour rate = 3000;
-  // Managers hour rate = 2500;
-  // SrConsultant hour rate = 2000;
-  // JrConsultant hour rate = 1500;
-  // Analyst hour rate = 1200;
-
   // If working on a job they get the correct hour rate... Working on multiple jobs + 5% hour rate
   // increase;
 
@@ -156,28 +173,29 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
 
   // Each time there is a new job apply these parameters;
 
+  // Function to recalibrate the revenue generated by each individual consultant per new project
+  // allocated to them
   protected abstract void revenueCalculationNewContractGiven();
 
+  // Recalibrating the revenue every time an agent finishes a contract
   abstract void revenueCalculationContractRelease();
 
-  @Override
-  public void revenueCalibrationNewContract(int agentRevenue) {
+  protected void revenueCalibrationNewContract(int agentRevenue) {
     if (nbProjects == 1) {
-      revenue = (agentRevenue * 20L); // 2500 a day... 2500*20 working days per month!
+      revenue = (agentRevenue * 20L); // AgentRevenue a day... *20 working days per month!
       basicRevenue = (agentRevenue * 20L);
     }
 
     // Working on multiple projects:
     if (nbProjects > 1) {
-      basicRevenue += 1.05 * agentRevenue;
+      basicRevenue *= 1.05 /* agentRevenue*/;
     }
 
     // Effect caused by efficiency:
     revenue = (long) (basicRevenue - (basicRevenue * (0.15 * efficiency)));
   }
 
-  @Override
-  public void revenueCalibrationContractRelease(int agentRevenue) {
+  protected void revenueCalibrationContractRelease(int agentRevenue) {
     // If not not working no revenue;
     if (nbProjects == 0) {
       revenue = 0;
@@ -185,13 +203,14 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
     }
 
     if (nbProjects != 0) {
-      basicRevenue /= 1.05;
+      basicRevenue /= 1.05 /* agentRevenue*/;
     }
 
     // Effect caused by efficiency:
     revenue = (long) (basicRevenue - (basicRevenue * (0.15 * efficiency)));
   }
 
+  // Message function for HomeCompany to calculate the total revenue and salary.
   @Override
   public void revenueSalaryMessage() {
     getLinks(Links.DeloitteConsultantLink.class)
@@ -207,6 +226,5 @@ public abstract class SuperConsultant extends Agent<Globals> implements Consulta
    * Debugging Features:
    ****************************************/
   @Variable public String dbAgentSpecialization;
-
   @Variable public String dbAgentStatus;
 }

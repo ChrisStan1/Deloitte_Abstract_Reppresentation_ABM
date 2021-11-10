@@ -1,5 +1,10 @@
-package models.client_contract;
+/**************************
+ * DefaultContractGenerationStrategy
+ * Generates the default contracts
+ * By cas220
+ **************************/
 
+package models.client_contract;
 
 import models.SimpleFirmModel.parameters.Specialization;
 
@@ -10,25 +15,27 @@ public class DefaultContractGenerationStrategy implements ContractGenerationStra
   // Contract ID counter:
   private static long idCounter = 1;
 
+  // Generates new contract size:
   @Override
   public long generateNewContractSize() {
-    return new Random().nextInt(100) * 100000; // from 100'000 - 100xe^6
+    return (new Random().nextInt(100) + 1) * 250000L;
   }
 
+  // Generates New contract duration: (min 1 month, max 6 moths + contract size)
   @Override
   public long generateNewContractDuration(long size) {
     return new Random().nextInt(5) + 1 + (size / 1000000);
   }
 
+  // Generates new delay between contracts
   @Override
   public long generateNewTimeToNextContract() {
     return new Random().nextInt(5);
   }
 
+  // Generates new contract specialization, 10% chance of a different specialization:
   @Override
   public Specialization generateNewContractSpecialization(Specialization compSpecialization) {
-
-    // Todo: Allow the user to select the probability for the specialization inheritance;
     if (new Random().nextInt(10) >= 1) {
       return compSpecialization;
     } else {
@@ -36,6 +43,7 @@ public class DefaultContractGenerationStrategy implements ContractGenerationStra
     }
   }
 
+  // Generates a new unique ID for all contracts:
   @Override
   public long generateNewContractId() {
     return idCounter++;

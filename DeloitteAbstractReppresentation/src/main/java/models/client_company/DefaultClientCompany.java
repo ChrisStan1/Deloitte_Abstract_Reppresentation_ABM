@@ -1,3 +1,9 @@
+/**************************
+ * DefaultClientCompany
+ * Represents the default client
+ * By cas220
+ **************************/
+
 package models.client_company;
 
 import models.SimpleFirmModel.Messages;
@@ -37,9 +43,12 @@ public class DefaultClientCompany extends SuperClientCompany {
               a.getMessagesOfType(Messages.MarketClientCompanyQuit.class)
                   .forEach(a::clientCompanyLeve));
 
-  // Todo: Add Contract Limit:
+  // Abstract function override, different Client companies may have different contract limits.
   @Override
-  protected boolean reachedContractLimit() {
+  protected boolean reachedContractLimit(int size) {
+    if (getGlobals().nbContracts < size) {
+      return true;
+    }
     return false;
   }
 }

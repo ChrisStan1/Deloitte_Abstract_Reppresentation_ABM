@@ -1,3 +1,10 @@
+/**************************
+ * Globals
+ * Set of variables allowing the user to initialize the ABM model.
+ * These variables are accessible by all agents in the model.
+ * By cas220
+ **************************/
+
 package models.SimpleFirmModel.parameters;
 
 import simudyne.core.abm.GlobalState;
@@ -11,27 +18,26 @@ public class Globals extends GlobalState {
   public int deloitteAgent = 1;
 
   @Input(name = "Home) Fixed Costs")
-  public int deloitteFixedCosts = 1000000;
+  public int deloitteFixedCosts = 25000000;
 
   @Input(name = "Home) Interest cost")
-  public int deloitteInterestCost = 100000;
+  public int deloitteInterestCost = 0;
 
   @Input(name = "Home) Corporate tax rate")
   public double deloitteCorporateTaxRate = 0.2;
 
-
   // Consultants
   @Input(name = "Cons) SrConsultants #")
-  public long nbSrConsultants = 5;
+  public long nbSrConsultants = 250;
 
   @Input(name = "Cons) nbSrConsultant per projectSize")
-  public double nbSrCPerProjectSize = 7500000.0;
+  public double nbSrCPerProjectSize = 10000000.0;
 
   @Input(name = "Cons) JrConsultants #")
-  public long nbJrConsultants = 10;
+  public long nbJrConsultants = 5000;
 
   @Input(name = "Cons) nbJrConsultant per projectSize")
-  public double nbJrCPerProjectSize = 2500000.0;
+  public double nbJrCPerProjectSize = 5000000.0;
 
   @Input(name = "eff) Drop in efficiency in %")
   public double inputEfficiency = 0.20;
@@ -42,36 +48,35 @@ public class Globals extends GlobalState {
   public double effQuittingEdge = 0.6;
 
   @Input(name = "Quit) Max nbMonths benched edge")
-  public int nbDaysBenched = 25; // This could become a random parameter for each agent...
+  public int nbDaysBenched = 25;
 
-  // Todo: // Current Unemployment rate = 4.8.. how to integrate this number...
   @Input(name = "Hire) SrConsultant Unemployment %")
-  public double srEmploymentMean = 0.75; // Current Unemployment rate...
+  public double srEmploymentMean = 0.75;
 
   @Input(name = "Hire) JrConsultant Unemployment %")
-  public double jrEmploymentMean = 0.95; // Current Unemployment rate...
+  public double jrEmploymentMean = 0.95;
 
   @Input(name = "Hire) Allowed missed contracts")
   public double allowedMissedContracts = 1;
 
   @Input(name = "Salary) Jr AvgSalary")
-  public int JrSalary = 200;
+  public int JrSalary = 270;
 
   @Input(name = "Salary) Sr AvgSalary")
-  public int SrSalary = 750;
+  public int SrSalary = 1040;
 
-  @Input(name = "Revenue) Jr AvgSalary")
-  public int JrRevenue = 1500;
+  @Input(name = "Revenue) Jr AvgRevenue")
+  public int JrRevenue = 1000;
 
-  @Input(name = "Revenue) Sr AvgSalary")
-  public int SrRevenue = 2500;
+  @Input(name = "Revenue) Sr AvgRevenue")
+  public int SrRevenue = 2750;
 
   // Companies
   @Input(name = "Comp) Companies #")
-  public long nbCompanies = 5;
+  public long nbCompanies = 250;
 
   @Input(name = "Comp) Contracts #")
-  public int nbContracts = 5;
+  public int nbContracts = 10;
 
   // Market
   @Input(name = "Market) Market Start")
@@ -81,7 +86,13 @@ public class Globals extends GlobalState {
   public boolean setMarketConstantGrowth = false;
 
   @Input(name = "Market) Constant Growth rate) ")
-  public double marketGrowth = 0.02;
+  public double marketGrowth = 0.002; // Yearly 0.02 //This is a month 0.002
+
+  @Input(name = "Market) Upper level probability")
+  public double upperLevelMarketProbability = 0.15;
+
+  @Input(name = "Market) Lower level probability")
+  public double lowerLevelMarketProbability = 0.50;
 
   // Hidden Variables
   public boolean hasHiredConsultants = false;

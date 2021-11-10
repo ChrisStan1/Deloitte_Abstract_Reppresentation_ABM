@@ -1,3 +1,9 @@
+/**************************
+ * SuperMarket
+ * Super class for the market
+ * By cas220
+ **************************/
+
 package models.market_enviroment;
 
 import models.SimpleFirmModel.Links;
@@ -13,10 +19,15 @@ import java.util.*;
 
 public abstract class SuperMarket extends Agent<Globals> implements Market {
 
+  // Printed
   @Variable public String name;
   @Variable public double srEmploymentMean = 1.0;
   @Variable public double jrEmploymentMean = 1.0;
 
+  @Variable public long nBClientCompanies = 0;
+  @Variable public long nBHomeCompanies = 0;
+
+  // Hidden
   public long agentID;
 
   // Keeping Track of Basic company Information:
@@ -24,6 +35,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
   public List<Long> clientCompanyQueue = new ArrayList<>();
   public HashMap<Long, Specialization> compSpecializationMap = new HashMap<>();
 
+  // Updating the probability of a consultant getting hired
   @Override
   public void employmentUpdateRate() {
 
@@ -31,6 +43,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
     updateEmploymentRate(false);
   }
 
+  // Randomizing the probability of a consultant getting hired
   @Override
   public void updateEmploymentRate(boolean isSrCons) {
 
@@ -47,6 +60,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
   public void homeCompanySetup(Messages.MarketRegistrationHomeCompany msg) {
     if (!homeCompanyQueue.contains(msg.ID)) {
       homeCompanyQueue.add(msg.ID);
+      nBHomeCompanies++;
     }
   }
 
@@ -56,11 +70,15 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
     if (!compSpecializationMap.containsKey(msg.ID)) {
       compSpecializationMap.put(msg.ID, msg.specialization);
       clientCompanyQueue.add(msg.ID);
+      nBClientCompanies++;
     }
   }
 
+  // Spawning new client companies, if the market call for it
   @Override
   public void spawnNewClientCompany(int nbSpawns) {
+
+    int inputSimulationsContracts = getGlobals().nbContracts;
 
     for (int i = 0; i < nbSpawns; i++) {
       spawn(
@@ -73,8 +91,7 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
             a.compSpecialization = Specialization.generateNewRandomSpecialization();
 
             // Contract Characteristics Setup
-            // Todo: I don't know how to fix this exact problem...
-            a.nbSimultaneousContracts = /*getGlobals().nbContracts +*/ new Random().nextInt(5);
+            a.nbSimultaneousContracts = inputSimulationsContracts + new Random().nextInt(5);
             a.contractGenerationStrategy = new DefaultContractGenerationStrategy();
 
             // Debugging: (Note only showing the first generated Contract)
@@ -85,22 +102,23 @@ public abstract class SuperMarket extends Agent<Globals> implements Market {
               a.addLink(homeComp, Links.DeloitteClientLink.class);
             }
           });
+      nBClientCompanies++;
     }
   }
 
+  // Method for picking a ClientCompany to quit HomeCompany if the market call for it
   @Override
   public void quitClientCompany(int nbQuits) {
-    // Send message No more contracts to be sent:
-    // When deloitte send a message contract completion, stop client company...
-    // There has to be at least 1 company at any one time
-    if (clientCompanyQueue.size() <= 1) {
+    if (clientCompanyQueue.size() >= 1) {
       for (int i = 0; i < nbQuits; i++) {
         int compQuit = new Random().nextInt(clientCompanyQueue.size());
         send(Messages.MarketClientCompanyQuit.class).to(clientCompanyQueue.get(compQuit));
         clientCompanyQueue.remove(compQuit);
+        nBClientCompanies--;
       }
     }
   }
 
+  // Abstract function of the child classes to get the current market value
   abstract void getMarketValue();
 }
